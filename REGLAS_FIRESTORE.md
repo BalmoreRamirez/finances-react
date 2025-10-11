@@ -8,11 +8,29 @@
 2. **Borra todo** el contenido actual
 3. **Copia y pega** exactamente esto:
 
+### **OPCIÓN A: PRODUCCIÓN (Recomendada - Segura)**
+
 ```javascript
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    // Transacciones
     match /transactions/{transaction} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    }
+    
+    // Compras (Inversiones)
+    match /purchases/{purchase} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    }
+    
+    // Créditos (Inversiones)
+    match /credits/{credit} {
       allow read: if request.auth != null && request.auth.uid == resource.data.userId;
       allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
       allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
@@ -20,6 +38,21 @@ service cloud.firestore {
   }
 }
 ```
+
+### **OPCIÓN B: DESARROLLO (Solo para Pruebas - Menos Segura)**
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+```
+
+⚠️ **La Opción B permite que cualquier usuario autenticado acceda a todos los datos. Úsala solo para desarrollo.**
 
 4. **Click en "Publicar"** (botón azul arriba a la derecha)
 

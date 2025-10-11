@@ -9,6 +9,7 @@ import { Balance } from '../Balance/Balance';
 import { ErrorBanner } from '../ErrorBanner/ErrorBanner';
 import { AnalyticsDashboard } from '../AnalyticsDashboard/AnalyticsDashboard';
 import { Settings } from '../Settings/Settings';
+import { Investments } from '../Investments/Investments';
 import './Dashboard.css';
 
 export const Dashboard = () => {
@@ -174,6 +175,17 @@ export const Dashboard = () => {
               subtitle="Visualiza y analiza tus finanzas con gráficas detalladas"
             />
             <AnalyticsDashboard transactions={transactions} />
+          </>
+        );
+
+      case 'investments':
+        return (
+          <>
+            <Header 
+              title="Inversiones" 
+              subtitle="Gestiona tus compras y créditos con seguimiento detallado"
+            />
+            <Investments />
           </>
         );
 

@@ -7,6 +7,7 @@ export const Sidebar = ({ currentView, onViewChange, onLogout, userEmail }) => {
   const menuItems = [
     { id: 'dashboard', icon: '📊', label: 'Dashboard', view: 'dashboard' },
     { id: 'transactions', icon: '💳', label: 'Transacciones', view: 'transactions' },
+    { id: 'investments', icon: '💎', label: 'Inversiones', view: 'investments' },
     { id: 'analytics', icon: '📈', label: 'Análisis', view: 'analytics' },
     { id: 'settings', icon: '⚙️', label: 'Configuración', view: 'settings' },
   ];

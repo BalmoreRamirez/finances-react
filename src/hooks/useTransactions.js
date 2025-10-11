@@ -7,7 +7,6 @@ import {
   doc, 
   query, 
   where, 
-  orderBy, 
   onSnapshot 
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
