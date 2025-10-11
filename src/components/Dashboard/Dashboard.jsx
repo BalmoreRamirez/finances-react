@@ -1,18 +1,24 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useTransactions } from '../../hooks/useTransactions';
+import { Sidebar } from '../Sidebar/Sidebar';
+import { Header } from '../Header/Header';
 import { TransactionForm } from '../TransactionForm/TransactionForm';
 import { TransactionList } from '../TransactionList/TransactionList';
 import { Balance } from '../Balance/Balance';
 import { ErrorBanner } from '../ErrorBanner/ErrorBanner';
+import { AnalyticsDashboard } from '../AnalyticsDashboard/AnalyticsDashboard';
+import { Settings } from '../Settings/Settings';
 import './Dashboard.css';
 
 export const Dashboard = () => {
   const { user, logout } = useAuth();
-  const { transactions, loading, addTransaction, deleteTransaction, getBalance } = useTransactions();
+  const { transactions, loading, addTransaction, updateTransaction, deleteTransaction, getBalance } = useTransactions();
   const [showForm, setShowForm] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState(null);
   const [showErrorBanner, setShowErrorBanner] = useState(false);
   const [firestoreError, setFirestoreError] = useState(false);
+  const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard', 'transactions', 'analytics', 'settings'
 
   useEffect(() => {
     // Detectar error de Firestore después de 3 segundos si no hay transacciones
@@ -50,47 +56,157 @@ export const Dashboard = () => {
     return result;
   };
 
+  const handleUpdateTransaction = async (id, transaction) => {
+    const result = await updateTransaction(id, transaction);
+    
+    if (!result.success && result.error.includes('Firestore')) {
+      setFirestoreError(true);
+      setShowErrorBanner(true);
+    }
+    
+    return result;
+  };
+
+  const handleEditTransaction = (transaction) => {
+    setEditingTransaction(transaction);
+    setShowForm(true);
+  };
+
+  const handleCloseForm = () => {
+    setShowForm(false);
+    setEditingTransaction(null);
+  };
+
+  const handleViewChange = (view) => {
+    setCurrentView(view);
+    setShowForm(false);
+    setEditingTransaction(null);
+  };
+
   const balance = getBalance();
 
+  const renderContent = () => {
+    switch (currentView) {
+      case 'dashboard':
+        return (
+          <>
+            <Header 
+              title="Dashboard" 
+              subtitle="Resumen general de tus finanzas"
+            />
+            <div className="dashboard-grid">
+              <Balance balance={balance} />
+              
+              <div className="quick-stats">
+                <div className="stat-card">
+                  <div className="stat-icon">💳</div>
+                  <div className="stat-info">
+                    <span className="stat-label">Total Transacciones</span>
+                    <span className="stat-value">{transactions.length}</span>
+                  </div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-icon">📈</div>
+                  <div className="stat-info">
+                    <span className="stat-label">Este Mes</span>
+                    <span className="stat-value">{transactions.filter(t => {
+                      const date = new Date(t.date);
+                      const now = new Date();
+                      return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+                    }).length}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="recent-section">
+                <h3>Transacciones Recientes</h3>
+                <TransactionList 
+                  transactions={transactions.slice(0, 5)}
+                  loading={loading}
+                  onDeleteTransaction={deleteTransaction}
+                  onEditTransaction={handleEditTransaction}
+                />
+              </div>
+            </div>
+          </>
+        );
+
+      case 'transactions':
+        return (
+          <>
+            <Header 
+              title="Transacciones" 
+              subtitle="Gestiona todas tus transacciones en un solo lugar"
+            >
+              <button 
+                onClick={() => setShowForm(!showForm)} 
+                className="btn-primary"
+              >
+                {showForm ? '✕ Cancelar' : '+ Nueva Transacción'}
+              </button>
+            </Header>
+
+            {showForm && (
+              <div className="form-section">
+                <TransactionForm 
+                  onAddTransaction={handleAddTransaction}
+                  onUpdateTransaction={handleUpdateTransaction}
+                  onClose={handleCloseForm}
+                  editingTransaction={editingTransaction}
+                />
+              </div>
+            )}
+
+            <TransactionList 
+              transactions={transactions}
+              loading={loading}
+              onDeleteTransaction={deleteTransaction}
+              onEditTransaction={handleEditTransaction}
+            />
+          </>
+        );
+
+      case 'analytics':
+        return (
+          <>
+            <Header 
+              title="Análisis Financiero" 
+              subtitle="Visualiza y analiza tus finanzas con gráficas detalladas"
+            />
+            <AnalyticsDashboard transactions={transactions} />
+          </>
+        );
+
+      case 'settings':
+        return (
+          <>
+            <Header 
+              title="Configuración" 
+              subtitle="Personaliza tu experiencia y gestiona categorías"
+            />
+            <Settings />
+          </>
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="dashboard">
+    <div className="app-layout">
       {showErrorBanner && <ErrorBanner onDismiss={() => setShowErrorBanner(false)} />}
       
-      <header className="dashboard-header" style={{ marginTop: showErrorBanner ? '180px' : '0' }}>
-        <h1>💰 Finanzas Personales</h1>
-        <div className="user-info">
-          <span>{user?.email}</span>
-          <button onClick={handleLogout} className="btn-logout">
-            Cerrar Sesión
-          </button>
-        </div>
-      </header>
+      <Sidebar 
+        currentView={currentView}
+        onViewChange={handleViewChange}
+        onLogout={handleLogout}
+        userEmail={user?.email}
+      />
 
-      <div className="dashboard-content">
-        <Balance balance={balance} />
-
-        <div className="actions">
-          <button 
-            onClick={() => setShowForm(!showForm)} 
-            className="btn-add-transaction"
-          >
-            {showForm ? '✕ Cancelar' : '+ Nueva Transacción'}
-          </button>
-        </div>
-
-        {showForm && (
-          <TransactionForm 
-            onAddTransaction={handleAddTransaction}
-            onClose={() => setShowForm(false)}
-          />
-        )}
-
-        <TransactionList 
-          transactions={transactions}
-          loading={loading}
-          onDeleteTransaction={deleteTransaction}
-        />
-      </div>
+      <main className="main-content">
+        {renderContent()}
+      </main>
     </div>
   );
 };

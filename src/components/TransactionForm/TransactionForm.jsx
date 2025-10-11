@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './TransactionForm.css';
 
-export const TransactionForm = ({ onAddTransaction, onClose }) => {
+export const TransactionForm = ({ onAddTransaction, onUpdateTransaction, onClose, editingTransaction }) => {
   const [formData, setFormData] = useState({
     type: 'egreso',
     description: '',
@@ -11,6 +11,19 @@ export const TransactionForm = ({ onAddTransaction, onClose }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Cargar datos de la transacción al editar
+  useEffect(() => {
+    if (editingTransaction) {
+      setFormData({
+        type: editingTransaction.type,
+        description: editingTransaction.description,
+        amount: editingTransaction.amount.toString(),
+        category: editingTransaction.category,
+        date: editingTransaction.date.split('T')[0]
+      });
+    }
+  }, [editingTransaction]);
 
   const categories = {
     ingreso: ['Salario', 'Freelance', 'Inversiones', 'Ventas', 'Otros'],
@@ -32,10 +45,17 @@ export const TransactionForm = ({ onAddTransaction, onClose }) => {
     setLoading(true);
     setError('');
 
-    const result = await onAddTransaction({
+    const transactionData = {
       ...formData,
       amount: parseFloat(formData.amount)
-    });
+    };
+
+    let result;
+    if (editingTransaction) {
+      result = await onUpdateTransaction(editingTransaction.id, transactionData);
+    } else {
+      result = await onAddTransaction(transactionData);
+    }
 
     setLoading(false);
 
@@ -55,7 +75,7 @@ export const TransactionForm = ({ onAddTransaction, onClose }) => {
 
   return (
     <div className="transaction-form">
-      <h3>Nueva Transacción</h3>
+      <h3>{editingTransaction ? 'Editar Transacción' : 'Nueva Transacción'}</h3>
       
       {error && (
         <div className="form-error">
@@ -136,7 +156,7 @@ export const TransactionForm = ({ onAddTransaction, onClose }) => {
 
         <div className="form-actions">
           <button type="submit" disabled={loading} className="btn-submit">
-            {loading ? 'Guardando...' : 'Guardar Transacción'}
+            {loading ? 'Guardando...' : editingTransaction ? 'Actualizar Transacción' : 'Guardar Transacción'}
           </button>
           <button type="button" onClick={onClose} className="btn-cancel">
             Cancelar

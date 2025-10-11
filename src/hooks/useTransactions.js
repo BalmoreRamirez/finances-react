@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { 
   collection, 
   addDoc, 
+  updateDoc,
   deleteDoc, 
   doc, 
   query, 
@@ -93,6 +94,29 @@ export const useTransactions = () => {
     }
   };
 
+  const updateTransaction = async (id, transaction) => {
+    try {
+      const transactionRef = doc(db, 'transactions', id);
+      await updateDoc(transactionRef, {
+        ...transaction,
+        date: new Date(transaction.date).toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+      return { success: true };
+    } catch (error) {
+      console.error('Error al actualizar transacción:', error);
+      
+      let errorMessage = error.message;
+      
+      if (error.code === 'permission-denied') {
+        errorMessage = '⚠️ Firestore no está configurado. Por favor, configura la base de datos y las reglas de seguridad en Firebase Console.';
+        console.error('📖 Lee el archivo ERROR_FIRESTORE.md para instrucciones detalladas');
+      }
+      
+      return { success: false, error: errorMessage };
+    }
+  };
+
   const getBalance = () => {
     const income = transactions
       .filter(t => t.type === 'ingreso')
@@ -113,6 +137,7 @@ export const useTransactions = () => {
     transactions,
     loading,
     addTransaction,
+    updateTransaction,
     deleteTransaction,
     getBalance
   };
