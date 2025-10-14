@@ -300,7 +300,13 @@ export const Investments = () => {
   const creditsSummary = {
     totalCapital: credits.reduce((sum, c) => sum + c.principalAmount, 0),
     totalRecovered: credits.reduce((sum, c) => sum + (c.totalPaid || 0), 0),
-    totalPending: credits.reduce((sum, c) => sum + (c.remainingBalance || c.totalAmount), 0)
+    totalPending: credits.reduce((sum, c) => sum + (c.remainingBalance || c.totalAmount), 0),
+    // Ganancias acumuladas = Total pagado - Capital prestado (solo de créditos completados o parcialmente pagados)
+    totalProfitAccumulated: credits.reduce((sum, c) => {
+      const paid = c.totalPaid || 0;
+      const profit = paid - c.principalAmount;
+      return sum + (profit > 0 ? profit : 0);
+    }, 0)
   };
 
   if (loading) {
@@ -447,20 +453,31 @@ export const Investments = () => {
               <div className="summary-content">
                 <div className="summary-label">Capital Prestado</div>
                 <div className="summary-value">${creditsSummary.totalCapital.toFixed(2)}</div>
+                <div className="summary-hint">Total invertido en créditos</div>
               </div>
             </div>
             <div className="summary-card">
-              <div className="summary-icon">✅</div>
+              <div className="summary-icon">💵</div>
               <div className="summary-content">
-                <div className="summary-label">Recuperado</div>
+                <div className="summary-label">Capital Recuperado</div>
                 <div className="summary-value success">${creditsSummary.totalRecovered.toFixed(2)}</div>
+                <div className="summary-hint">Dinero recibido de pagos</div>
+              </div>
+            </div>
+            <div className="summary-card">
+              <div className="summary-icon">💰</div>
+              <div className="summary-content">
+                <div className="summary-label">Ganancias Acumuladas</div>
+                <div className="summary-value profit">${creditsSummary.totalProfitAccumulated.toFixed(2)}</div>
+                <div className="summary-hint">Intereses ya cobrados</div>
               </div>
             </div>
             <div className="summary-card">
               <div className="summary-icon">⏳</div>
               <div className="summary-content">
-                <div className="summary-label">Pendiente</div>
+                <div className="summary-label">Pendiente de Cobro</div>
                 <div className="summary-value warning">${creditsSummary.totalPending.toFixed(2)}</div>
+                <div className="summary-hint">Capital + intereses por cobrar</div>
               </div>
             </div>
           </div>
@@ -477,13 +494,18 @@ export const Investments = () => {
                     <th>Interés</th>
                     <th>Total a Cobrar</th>
                     <th>Pagado</th>
+                    <th>Ganancia</th>
                     <th>Pendiente</th>
                     <th>Estado</th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {credits.map(credit => (
+                  {credits.map(credit => {
+                    // Calcular ganancia acumulada de este crédito (lo que ya se cobró de más del capital)
+                    const profitEarned = Math.max(0, (credit.totalPaid || 0) - credit.principalAmount);
+                    
+                    return (
                     <tr key={credit.id}>
                       <td>{credit.date.toLocaleDateString()}</td>
                       <td>
@@ -503,6 +525,10 @@ export const Investments = () => {
                       <td className="amount-cell success">
                         ${(credit.totalPaid || 0).toFixed(2)}
                         <span className="payment-count">({credit.payments?.length || 0} pagos)</span>
+                      </td>
+                      <td className="amount-cell profit">
+                        ${profitEarned.toFixed(2)}
+                        {profitEarned > 0 && <span className="profit-indicator">💰</span>}
                       </td>
                       <td className="amount-cell warning">${(credit.remainingBalance || credit.totalAmount).toFixed(2)}</td>
                       <td>
@@ -536,7 +562,8 @@ export const Investments = () => {
                         </button>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             ) : (

@@ -184,6 +184,21 @@
   color: var(--text-primary);
 }
 
+.summary-value.profit {
+  color: #10b981;
+  background: linear-gradient(135deg, #10b981, #059669);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.summary-hint {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  opacity: 0.8;
+}
+
 /* Empty State */
 .empty-state {
   display: flex;
@@ -294,6 +309,30 @@
 
 .amount-cell.success {
   color: #10b981;
+}
+
+.amount-cell.profit {
+  color: #10b981;
+  font-weight: 700;
+}
+
+.profit-indicator {
+  margin-left: 4px;
+  font-size: 0.9rem;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.payment-count {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: normal;
+  margin-top: 2px;
 }
 
 .amount-cell.warning {
