@@ -25,6 +25,11 @@ export const Investments = () => {
   const [editingItem, setEditingItem] = useState(null);
   const [selectedCredit, setSelectedCredit] = useState(null);
 
+  // Estados para paginación
+  const [currentPagePurchases, setCurrentPagePurchases] = useState(1);
+  const [currentPageCredits, setCurrentPageCredits] = useState(1);
+  const itemsPerPage = 10;
+
   // Estado para agregar pago
   const [paymentForm, setPaymentForm] = useState({
     amount: '',
@@ -290,6 +295,22 @@ export const Investments = () => {
     });
   };
 
+  // Ordenar y paginar compras (más recientes primero)
+  const sortedPurchases = [...purchases].sort((a, b) => b.date - a.date);
+  const totalPagesPurchases = Math.ceil(sortedPurchases.length / itemsPerPage);
+  const paginatedPurchases = sortedPurchases.slice(
+    (currentPagePurchases - 1) * itemsPerPage,
+    currentPagePurchases * itemsPerPage
+  );
+
+  // Ordenar y paginar créditos (más recientes primero)
+  const sortedCredits = [...credits].sort((a, b) => b.date - a.date);
+  const totalPagesCredits = Math.ceil(sortedCredits.length / itemsPerPage);
+  const paginatedCredits = sortedCredits.slice(
+    (currentPageCredits - 1) * itemsPerPage,
+    currentPageCredits * itemsPerPage
+  );
+
   // Calcular resúmenes
   const purchasesSummary = {
     totalInvestment: purchases.reduce((sum, p) => sum + p.investment, 0),
@@ -376,6 +397,7 @@ export const Investments = () => {
           {/* Tabla de compras */}
           <div className="purchases-table-container">
             {purchases.length > 0 ? (
+              <>
               <table className="purchases-table">
                 <thead>
                   <tr>
@@ -389,7 +411,7 @@ export const Investments = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {purchases.map(purchase => (
+                  {paginatedPurchases.map(purchase => (
                     <tr key={purchase.id}>
                       <td>{purchase.date.toLocaleDateString()}</td>
                       <td>
@@ -428,6 +450,31 @@ export const Investments = () => {
                   ))}
                 </tbody>
               </table>
+              
+              {/* Paginación Compras */}
+              {totalPagesPurchases > 1 && (
+                <div className="pagination">
+                  <button 
+                    className="pagination-btn"
+                    onClick={() => setCurrentPagePurchases(prev => Math.max(1, prev - 1))}
+                    disabled={currentPagePurchases === 1}
+                  >
+                    ← Anterior
+                  </button>
+                  <span className="pagination-info">
+                    Página {currentPagePurchases} de {totalPagesPurchases}
+                    <span className="pagination-count">({purchases.length} compras)</span>
+                  </span>
+                  <button 
+                    className="pagination-btn"
+                    onClick={() => setCurrentPagePurchases(prev => Math.min(totalPagesPurchases, prev + 1))}
+                    disabled={currentPagePurchases === totalPagesPurchases}
+                  >
+                    Siguiente →
+                  </button>
+                </div>
+              )}
+              </>
             ) : (
               <div className="empty-state">
                 <span className="empty-icon">📦</span>
@@ -485,6 +532,7 @@ export const Investments = () => {
           {/* Tabla de créditos */}
           <div className="credits-table-container">
             {credits.length > 0 ? (
+              <>
               <table className="credits-table">
                 <thead>
                   <tr>
@@ -501,7 +549,7 @@ export const Investments = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {credits.map(credit => {
+                  {paginatedCredits.map(credit => {
                     // Calcular ganancia acumulada de este crédito (lo que ya se cobró de más del capital)
                     const profitEarned = Math.max(0, (credit.totalPaid || 0) - credit.principalAmount);
                     
@@ -566,6 +614,31 @@ export const Investments = () => {
                   })}
                 </tbody>
               </table>
+              
+              {/* Paginación Créditos */}
+              {totalPagesCredits > 1 && (
+                <div className="pagination">
+                  <button 
+                    className="pagination-btn"
+                    onClick={() => setCurrentPageCredits(prev => Math.max(1, prev - 1))}
+                    disabled={currentPageCredits === 1}
+                  >
+                    ← Anterior
+                  </button>
+                  <span className="pagination-info">
+                    Página {currentPageCredits} de {totalPagesCredits}
+                    <span className="pagination-count">({credits.length} créditos)</span>
+                  </span>
+                  <button 
+                    className="pagination-btn"
+                    onClick={() => setCurrentPageCredits(prev => Math.min(totalPagesCredits, prev + 1))}
+                    disabled={currentPageCredits === totalPagesCredits}
+                  >
+                    Siguiente →
+                  </button>
+                </div>
+              )}
+              </>
             ) : (
               <div className="empty-state">
                 <span className="empty-icon">💳</span>
