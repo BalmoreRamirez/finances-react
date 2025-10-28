@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useInvestments } from '../../hooks/useInvestments';
 import { useAuth } from '../../context/AuthContext';
+import html2canvas from 'html2canvas';
 import './Investments.css';
 
 export const Investments = () => {
@@ -19,11 +20,21 @@ export const Investments = () => {
     deletePayment
   } = useInvestments(user?.uid);
 
+  // Referencia para el reporte
+  const reportRef = useRef(null);
+
   const [activeTab, setActiveTab] = useState('purchases'); // purchases, credits
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState(''); // purchase, credit, payments
   const [editingItem, setEditingItem] = useState(null);
   const [selectedCredit, setSelectedCredit] = useState(null);
+
+  // Estados para sub-tabs de créditos
+  const [creditSubTab, setCreditSubTab] = useState('active'); // active, completed
+
+  // Estado para mostrar modal de reporte
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [generatingReport, setGeneratingReport] = useState(false);
 
   // Estados para paginación
   const [currentPagePurchases, setCurrentPagePurchases] = useState(1);
@@ -64,6 +75,11 @@ export const Investments = () => {
       }
     }
   }, [credits]);
+
+  // Resetear página al cambiar de sub-tab de créditos
+  useEffect(() => {
+    setCurrentPageCredits(1);
+  }, [creditSubTab]);
 
   // Calcular ganancia y ROI de compra
   const calculatePurchaseMetrics = () => {
@@ -282,6 +298,47 @@ export const Investments = () => {
     }
   };
 
+  // Función para exportar reporte de créditos a JPG
+  const exportCreditsReport = async () => {
+    try {
+      setGeneratingReport(true);
+      setShowReportModal(true);
+
+      // Esperar a que el modal se renderice
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      if (reportRef.current) {
+        const canvas = await html2canvas(reportRef.current, {
+          scale: 2,
+          backgroundColor: '#ffffff',
+          logging: false,
+          useCORS: true
+        });
+
+        // Convertir canvas a imagen JPG
+        const image = canvas.toDataURL('image/jpeg', 1.0);
+        
+        // Crear link de descarga
+        const link = document.createElement('a');
+        const date = new Date().toISOString().split('T')[0];
+        link.download = `reporte-creditos-${date}.jpg`;
+        link.href = image;
+        link.click();
+
+        // Cerrar modal después de descargar
+        setTimeout(() => {
+          setShowReportModal(false);
+          setGeneratingReport(false);
+        }, 500);
+      }
+    } catch (error) {
+      console.error('Error generando reporte:', error);
+      alert('Error al generar el reporte');
+      setShowReportModal(false);
+      setGeneratingReport(false);
+    }
+  };
+
   const closeModal = () => {
     setShowModal(false);
     setEditingItem(null);
@@ -305,8 +362,14 @@ export const Investments = () => {
 
   // Ordenar y paginar créditos (más recientes primero)
   const sortedCredits = [...credits].sort((a, b) => b.date - a.date);
-  const totalPagesCredits = Math.ceil(sortedCredits.length / itemsPerPage);
-  const paginatedCredits = sortedCredits.slice(
+  
+  // Filtrar créditos por sub-tab
+  const filteredCredits = creditSubTab === 'active' 
+    ? sortedCredits.filter(c => c.status === 'active')
+    : sortedCredits.filter(c => c.status === 'completed');
+  
+  const totalPagesCredits = Math.ceil(filteredCredits.length / itemsPerPage);
+  const paginatedCredits = filteredCredits.slice(
     (currentPageCredits - 1) * itemsPerPage,
     currentPageCredits * itemsPerPage
   );
@@ -529,9 +592,42 @@ export const Investments = () => {
             </div>
           </div>
 
+          {/* Sub-tabs para créditos */}
+          <div className="credits-sub-tabs">
+            <div className="sub-tabs-left">
+              <button
+                className={`sub-tab-btn ${creditSubTab === 'active' ? 'active' : ''}`}
+                onClick={() => setCreditSubTab('active')}
+              >
+                <span className="sub-tab-icon">⏳</span>
+                <span className="sub-tab-label">Activos</span>
+                <span className="sub-tab-count">{credits.filter(c => c.status === 'active').length}</span>
+              </button>
+              <button
+                className={`sub-tab-btn ${creditSubTab === 'completed' ? 'active' : ''}`}
+                onClick={() => setCreditSubTab('completed')}
+              >
+                <span className="sub-tab-icon">✅</span>
+                <span className="sub-tab-label">Completados</span>
+                <span className="sub-tab-count">{credits.filter(c => c.status === 'completed').length}</span>
+              </button>
+            </div>
+            <button
+              className="btn-export"
+              onClick={exportCreditsReport}
+              disabled={filteredCredits.length === 0 || generatingReport}
+              title="Exportar reporte a JPG"
+            >
+              <span className="btn-icon">📊</span>
+              <span className="btn-text">
+                {generatingReport ? 'Generando...' : 'Exportar Reporte'}
+              </span>
+            </button>
+          </div>
+
           {/* Tabla de créditos */}
           <div className="credits-table-container">
-            {credits.length > 0 ? (
+            {filteredCredits.length > 0 ? (
               <>
               <table className="credits-table">
                 <thead>
@@ -642,13 +738,19 @@ export const Investments = () => {
             ) : (
               <div className="empty-state">
                 <span className="empty-icon">💳</span>
-                <p>No hay créditos registrados</p>
-                <button 
-                  className="btn-primary"
-                  onClick={() => openNewModal('credit')}
-                >
-                  Registrar Primer Crédito
-                </button>
+                <p>
+                  {creditSubTab === 'active' 
+                    ? 'No hay créditos activos' 
+                    : 'No hay créditos completados'}
+                </p>
+                {credits.length === 0 && (
+                  <button 
+                    className="btn-primary"
+                    onClick={() => openNewModal('credit')}
+                  >
+                    Registrar Primer Crédito
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -949,6 +1051,77 @@ export const Investments = () => {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal/Template para reporte JPG (oculto) */}
+      {showReportModal && (
+        <div className="report-modal-overlay">
+          <div ref={reportRef} className="credit-report">
+            <div className="report-header">
+              <h1>Reporte de Créditos</h1>
+              <p className="report-date">Fecha: {new Date().toLocaleDateString()}</p>
+              <p className="report-filter">Estado: {creditSubTab === 'active' ? 'Activos' : 'Completados'}</p>
+            </div>
+
+            <table className="report-table">
+              <thead>
+                <tr>
+                  <th>Cliente</th>
+                  <th>Crédito</th>
+                  <th>Pagado</th>
+                  <th>Faltante</th>
+                  <th>Cuotas</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredCredits.map(credit => {
+                  const pending = credit.totalAmount - (credit.totalPaid || 0);
+                  
+                  return (
+                    <React.Fragment key={credit.id}>
+                      <tr className="credit-row">
+                        <td className="client-name">{credit.clientName}</td>
+                        <td className="amount">${credit.totalAmount.toFixed(2)}</td>
+                        <td className="paid">${(credit.totalPaid || 0).toFixed(2)}</td>
+                        <td className="pending">${pending.toFixed(2)}</td>
+                        <td className="installments">{credit.payments?.length || 0}</td>
+                      </tr>
+                      {credit.payments && credit.payments.length > 0 && (
+                        <tr className="payments-row">
+                          <td colSpan="5">
+                            <div className="payment-dates">
+                              <strong>Fechas de pago:</strong>
+                              <span className="dates-list">
+                                {credit.payments.map((payment, idx) => (
+                                  <span key={idx} className="payment-date-item">
+                                    {new Date(payment.date).toLocaleDateString()} (${payment.amount.toFixed(2)})
+                                  </span>
+                                ))}
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </tbody>
+              <tfoot>
+                <tr className="totals-row">
+                  <td><strong>TOTALES</strong></td>
+                  <td><strong>${filteredCredits.reduce((sum, c) => sum + c.totalAmount, 0).toFixed(2)}</strong></td>
+                  <td><strong>${filteredCredits.reduce((sum, c) => sum + (c.totalPaid || 0), 0).toFixed(2)}</strong></td>
+                  <td><strong>${filteredCredits.reduce((sum, c) => sum + (c.totalAmount - (c.totalPaid || 0)), 0).toFixed(2)}</strong></td>
+                  <td><strong>{filteredCredits.reduce((sum, c) => sum + (c.payments?.length || 0), 0)}</strong></td>
+                </tr>
+              </tfoot>
+            </table>
+
+            <div className="report-footer">
+              <p>Total de créditos: {filteredCredits.length}</p>
             </div>
           </div>
         </div>
