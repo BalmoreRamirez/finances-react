@@ -6,6 +6,7 @@ import {
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import './AnalyticsDashboard.css';
+import { formatDateSV, parseDateYMDToSVMidnightUTC, todayYMDInSV } from '../../utils/dateTZ';
 
 export const AnalyticsDashboard = ({ transactions }) => {
   const [period, setPeriod] = useState('mes');
@@ -21,24 +22,26 @@ export const AnalyticsDashboard = ({ transactions }) => {
 
   // Filtrar transacciones por período
   const filteredTransactions = useMemo(() => {
-    const now = new Date();
-    const startDate = new Date();
+    // Calcular inicio de período basado en TZ de El Salvador (medianoche)
+    const todayYMD = todayYMDInSV();
+    const startOfTodaySV = parseDateYMDToSVMidnightUTC(todayYMD);
+    const startDate = new Date(startOfTodaySV);
 
     switch (period) {
       case 'dia':
-        startDate.setHours(0, 0, 0, 0);
+        // ya está en inicio del día SV
         break;
       case 'semana':
-        startDate.setDate(now.getDate() - 7);
+        startDate.setUTCDate(startDate.getUTCDate() - 7);
         break;
       case 'mes':
-        startDate.setMonth(now.getMonth() - 1);
+        startDate.setUTCMonth(startDate.getUTCMonth() - 1);
         break;
       case 'año':
-        startDate.setFullYear(now.getFullYear() - 1);
+        startDate.setUTCFullYear(startDate.getUTCFullYear() - 1);
         break;
       default:
-        startDate.setMonth(now.getMonth() - 1);
+        startDate.setUTCMonth(startDate.getUTCMonth() - 1);
     }
 
     return transactions.filter(t => new Date(t.date) >= startDate);
@@ -91,11 +94,8 @@ export const AnalyticsDashboard = ({ transactions }) => {
     const dailyData = {};
 
     filteredTransactions.forEach(t => {
-      const date = new Date(t.date).toLocaleDateString('es-ES', { 
-        month: 'short', 
-        day: 'numeric' 
-      });
-      
+      const date = formatDateSV(t.date, { month: 'short', day: 'numeric' });
+
       if (!dailyData[date]) {
         dailyData[date] = { date, ingresos: 0, egresos: 0 };
       }
@@ -107,7 +107,7 @@ export const AnalyticsDashboard = ({ transactions }) => {
       }
     });
 
-    return Object.values(dailyData).slice(-10); // Últimos 10 días/puntos
+    return Object.values(dailyData).slice(-10);
   }, [filteredTransactions]);
 
   // Generar recomendaciones
@@ -202,7 +202,7 @@ export const AnalyticsDashboard = ({ transactions }) => {
       const imgY = 10;
 
       pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
-      pdf.save(`reporte-financiero-${period}-${new Date().toISOString().split('T')[0]}.pdf`);
+      pdf.save(`reporte-financiero-${period}-${todayYMDInSV()}.pdf`);
     } catch (error) {
       console.error('Error al exportar PDF:', error);
       alert('Error al generar el PDF. Por favor, intenta nuevamente.');
@@ -212,7 +212,7 @@ export const AnalyticsDashboard = ({ transactions }) => {
   };
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('es-ES', {
+    return new Intl.NumberFormat('es-SV', {
       style: 'currency',
       currency: 'USD'
     }).format(value);

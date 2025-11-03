@@ -11,6 +11,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
+import { parseDateYMDToSVMidnightUTC } from '../utils/dateTZ';
 
 export const useTransactions = () => {
   const [transactions, setTransactions] = useState([]);
@@ -62,11 +63,13 @@ export const useTransactions = () => {
 
   const addTransaction = async (transaction) => {
     try {
+      const normalizedDate = parseDateYMDToSVMidnightUTC(transaction.date).toISOString();
+      const nowIso = new Date().toISOString();
       await addDoc(collection(db, 'transactions'), {
         ...transaction,
         userId: user.uid,
-        date: new Date(transaction.date).toISOString(),
-        createdAt: new Date().toISOString()
+        date: normalizedDate,
+        createdAt: nowIso
       });
       return { success: true };
     } catch (error) {
@@ -96,10 +99,12 @@ export const useTransactions = () => {
   const updateTransaction = async (id, transaction) => {
     try {
       const transactionRef = doc(db, 'transactions', id);
+      const normalizedDate = parseDateYMDToSVMidnightUTC(transaction.date).toISOString();
+      const nowIso = new Date().toISOString();
       await updateDoc(transactionRef, {
         ...transaction,
-        date: new Date(transaction.date).toISOString(),
-        updatedAt: new Date().toISOString()
+        date: normalizedDate,
+        updatedAt: nowIso
       });
       return { success: true };
     } catch (error) {

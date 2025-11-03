@@ -3,6 +3,7 @@ import { useInvestments } from '../../hooks/useInvestments';
 import { useAuth } from '../../context/AuthContext';
 import html2canvas from 'html2canvas';
 import './Investments.css';
+import { formatDateSV, todayYMDInSV } from '../../utils/dateTZ';
 
 export const Investments = () => {
   const { user } = useAuth();
@@ -44,7 +45,7 @@ export const Investments = () => {
   // Estado para agregar pago
   const [paymentForm, setPaymentForm] = useState({
     amount: '',
-    date: new Date().toISOString().split('T')[0],
+    date: todayYMDInSV(),
     notes: ''
   });
 
@@ -53,7 +54,7 @@ export const Investments = () => {
     productName: '',
     investment: '',
     salePrice: '',
-    date: new Date().toISOString().split('T')[0],
+    date: todayYMDInSV(),
     description: ''
   });
 
@@ -62,7 +63,7 @@ export const Investments = () => {
     clientName: '',
     principalAmount: '',
     interestRate: '',
-    date: new Date().toISOString().split('T')[0],
+    date: todayYMDInSV(),
     description: ''
   });
 
@@ -114,7 +115,7 @@ export const Investments = () => {
       productName: purchaseForm.productName,
       investment,
       salePrice,
-      date: new Date(purchaseForm.date),
+      date: purchaseForm.date, // pasar string YYYY-MM-DD
       description: purchaseForm.description
     };
 
@@ -139,7 +140,7 @@ export const Investments = () => {
       productName: '',
       investment: '',
       salePrice: '',
-      date: new Date().toISOString().split('T')[0],
+      date: todayYMDInSV(),
       description: ''
     });
   };
@@ -184,7 +185,7 @@ export const Investments = () => {
       interestRate: rate,
       interestAmount: interest,
       totalAmount,
-      date: new Date(creditForm.date),
+      date: creditForm.date, // pasar string YYYY-MM-DD
       description: creditForm.description
     };
 
@@ -209,7 +210,7 @@ export const Investments = () => {
       clientName: '',
       principalAmount: '',
       interestRate: '',
-      date: new Date().toISOString().split('T')[0],
+      date: todayYMDInSV(),
       description: ''
     });
   };
@@ -242,7 +243,7 @@ export const Investments = () => {
     setShowModal(true);
     setPaymentForm({
       amount: '',
-      date: new Date().toISOString().split('T')[0],
+      date: todayYMDInSV(),
       notes: ''
     });
   };
@@ -260,14 +261,14 @@ export const Investments = () => {
     const result = await addPayment(
       selectedCredit.id,
       amount,
-      new Date(paymentForm.date),
+      paymentForm.date, // pasar string YYYY-MM-DD
       paymentForm.notes
     );
 
     if (result.success) {
       setPaymentForm({
         amount: '',
-        date: new Date().toISOString().split('T')[0],
+        date: todayYMDInSV(),
         notes: ''
       });
       // El useEffect se encargará de actualizar selectedCredit automáticamente
@@ -347,7 +348,7 @@ export const Investments = () => {
     resetCreditForm();
     setPaymentForm({
       amount: '',
-      date: new Date().toISOString().split('T')[0],
+      date: todayYMDInSV(),
       notes: ''
     });
   };
@@ -476,7 +477,7 @@ export const Investments = () => {
                 <tbody>
                   {paginatedPurchases.map(purchase => (
                     <tr key={purchase.id}>
-                      <td>{purchase.date.toLocaleDateString()}</td>
+                      <td>{formatDateSV(purchase.date)}</td>
                       <td>
                         <div className="product-cell">
                           <span className="product-name">{purchase.productName}</span>
@@ -646,12 +647,11 @@ export const Investments = () => {
                 </thead>
                 <tbody>
                   {paginatedCredits.map(credit => {
-                    // Calcular ganancia acumulada de este crédito (lo que ya se cobró de más del capital)
                     const profitEarned = Math.max(0, (credit.totalPaid || 0) - credit.principalAmount);
                     
                     return (
                     <tr key={credit.id}>
-                      <td>{credit.date.toLocaleDateString()}</td>
+                      <td>{formatDateSV(credit.date)}</td>
                       <td>
                         <div className="client-cell">
                           <span className="client-name">{credit.clientName}</span>
@@ -1031,7 +1031,7 @@ export const Investments = () => {
                           </div>
                           <div className="payment-details">
                             <span className="payment-date">
-                              📅 {new Date(payment.date).toLocaleDateString()}
+                              📅 {formatDateSV(payment.date)}
                             </span>
                             {payment.notes && (
                               <span className="payment-notes">📝 {payment.notes}</span>
@@ -1062,7 +1062,7 @@ export const Investments = () => {
           <div ref={reportRef} className="credit-report">
             <div className="report-header">
               <h1>Reporte de Créditos</h1>
-              <p className="report-date">Fecha: {new Date().toLocaleDateString()}</p>
+              <p className="report-date">Fecha: {formatDateSV(new Date())}</p>
               <p className="report-filter">Estado: {creditSubTab === 'active' ? 'Activos' : 'Completados'}</p>
             </div>
 
@@ -1097,7 +1097,7 @@ export const Investments = () => {
                               <span className="dates-list">
                                 {credit.payments.map((payment, idx) => (
                                   <span key={idx} className="payment-date-item">
-                                    {new Date(payment.date).toLocaleDateString()} (${payment.amount.toFixed(2)})
+                                    {formatDateSV(payment.date)} (${payment.amount.toFixed(2)})
                                   </span>
                                 ))}
                               </span>

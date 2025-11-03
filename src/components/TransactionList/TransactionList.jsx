@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import './TransactionList.css';
+import { formatDateSV } from '../../utils/dateTZ';
 
 export const TransactionList = ({ transactions, loading, onDeleteTransaction, onEditTransaction }) => {
   const [viewMode, setViewMode] = useState('table'); // 'table' or 'cards'
@@ -8,19 +9,14 @@ export const TransactionList = ({ transactions, loading, onDeleteTransaction, on
   const itemsPerPage = 10;
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-ES', {
+    return new Intl.NumberFormat('es-SV', {
       style: 'currency',
       currency: 'USD'
     }).format(amount);
   };
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('es-ES', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    }).format(date);
+    return formatDateSV(dateString);
   };
 
   const handleDelete = async (id) => {

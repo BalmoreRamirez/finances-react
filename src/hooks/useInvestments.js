@@ -11,6 +11,7 @@ import {
   Timestamp 
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import { parseDateYMDToSVMidnightUTC } from '../utils/dateTZ';
 
 export const useInvestments = (userId) => {
   const [purchases, setPurchases] = useState([]);
@@ -94,10 +95,11 @@ export const useInvestments = (userId) => {
   // Agregar compra
   const addPurchase = async (purchaseData) => {
     try {
+      const normalizedDate = parseDateYMDToSVMidnightUTC(purchaseData.date);
       const newPurchase = {
         ...purchaseData,
         userId,
-        date: Timestamp.fromDate(purchaseData.date || new Date()),
+        date: Timestamp.fromDate(normalizedDate),
         profit: purchaseData.salePrice - purchaseData.investment,
         roi: ((purchaseData.salePrice - purchaseData.investment) / purchaseData.investment) * 100,
         createdAt: Timestamp.now()
@@ -115,11 +117,12 @@ export const useInvestments = (userId) => {
   const updatePurchase = async (purchaseId, purchaseData) => {
     try {
       const purchaseRef = doc(db, 'purchases', purchaseId);
+      const normalizedDate = purchaseData.date instanceof Date
+          ? purchaseData.date
+          : parseDateYMDToSVMidnightUTC(purchaseData.date);
       const updatedData = {
         ...purchaseData,
-        date: purchaseData.date instanceof Date 
-          ? Timestamp.fromDate(purchaseData.date)
-          : purchaseData.date,
+        date: Timestamp.fromDate(normalizedDate),
         profit: purchaseData.salePrice - purchaseData.investment,
         roi: ((purchaseData.salePrice - purchaseData.investment) / purchaseData.investment) * 100,
         updatedAt: Timestamp.now()
@@ -147,14 +150,15 @@ export const useInvestments = (userId) => {
   // Agregar crédito
   const addCredit = async (creditData) => {
     try {
+      const normalizedDate = parseDateYMDToSVMidnightUTC(creditData.date);
       const newCredit = {
         ...creditData,
         userId,
-        date: Timestamp.fromDate(creditData.date || new Date()),
-        payments: [], // Array vacío para registrar pagos flexibles
+        date: Timestamp.fromDate(normalizedDate),
+        payments: [],
         totalPaid: 0,
         remainingBalance: creditData.totalAmount,
-        status: 'active', // active, completed
+        status: 'active',
         createdAt: Timestamp.now()
       };
 
@@ -170,12 +174,13 @@ export const useInvestments = (userId) => {
   const updateCredit = async (creditId, creditData) => {
     try {
       const creditRef = doc(db, 'credits', creditId);
-      
+      const normalizedDate = creditData.date instanceof Date
+          ? creditData.date
+          : parseDateYMDToSVMidnightUTC(creditData.date);
+
       let updatedData = {
         ...creditData,
-        date: creditData.date instanceof Date 
-          ? Timestamp.fromDate(creditData.date)
-          : creditData.date,
+        date: Timestamp.fromDate(normalizedDate),
         updatedAt: Timestamp.now()
       };
 
@@ -193,9 +198,11 @@ export const useInvestments = (userId) => {
       const credit = credits.find(c => c.id === creditId);
       if (!credit) throw new Error('Credit not found');
 
+      const parsedPaymentDate = paymentDate instanceof Date ? paymentDate : parseDateYMDToSVMidnightUTC(paymentDate);
+
       const newPayment = {
         amount: parseFloat(paymentAmount),
-        date: Timestamp.fromDate(paymentDate instanceof Date ? paymentDate : new Date(paymentDate)),
+        date: Timestamp.fromDate(parsedPaymentDate),
         notes: notes,
         createdAt: Timestamp.now()
       };

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import './TransactionForm.css';
+import { todayYMDInSV } from '../../utils/dateTZ';
 
 export const TransactionForm = ({ onAddTransaction, onUpdateTransaction, onClose, editingTransaction }) => {
   const [formData, setFormData] = useState({
@@ -7,7 +8,7 @@ export const TransactionForm = ({ onAddTransaction, onUpdateTransaction, onClose
     description: '',
     amount: '',
     category: '',
-    date: new Date().toISOString().split('T')[0]
+    date: todayYMDInSV()
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -65,7 +66,7 @@ export const TransactionForm = ({ onAddTransaction, onUpdateTransaction, onClose
         description: '',
         amount: '',
         category: '',
-        date: new Date().toISOString().split('T')[0]
+        date: todayYMDInSV()
       });
       onClose();
     } else {
