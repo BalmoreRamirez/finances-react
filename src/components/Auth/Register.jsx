@@ -41,11 +41,12 @@ export const Register = ({ onToggle }) => {
   return (
     <div className="auth-form">
       <h2>Crear Cuenta</h2>
-      {error && <div className="error-message">{error}</div>}
+      {error && <div className="alert alert-danger" role="alert">{error}</div>}
       <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>Email</label>
+        <div className="mb-3">
+          <label className="form-label">Email</label>
           <input
+            className="form-control"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -53,9 +54,10 @@ export const Register = ({ onToggle }) => {
             placeholder="correo@ejemplo.com"
           />
         </div>
-        <div className="form-group">
-          <label>Contraseña</label>
+        <div className="mb-3">
+          <label className="form-label">Contraseña</label>
           <input
+            className="form-control"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -63,9 +65,10 @@ export const Register = ({ onToggle }) => {
             placeholder="••••••••"
           />
         </div>
-        <div className="form-group">
-          <label>Confirmar Contraseña</label>
+        <div className="mb-3">
+          <label className="form-label">Confirmar Contraseña</label>
           <input
+            className="form-control"
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
@@ -73,7 +76,7 @@ export const Register = ({ onToggle }) => {
             placeholder="••••••••"
           />
         </div>
-        <button type="submit" disabled={loading} className="btn-primary">
+        <button type="submit" disabled={loading} className="btn btn-primary w-100">
           {loading ? 'Cargando...' : 'Registrarse'}
         </button>
       </form>

@@ -103,29 +103,29 @@ export const TransactionList = ({ transactions, loading, onDeleteTransaction, on
 
       {/* Vista de tabla */}
       {viewMode === 'table' ? (
-        <div className="table-container">
-          <table className="transactions-table">
+        <div className="table-container table-responsive">
+          <table className="transactions-table table table-hover align-middle">
             <thead>
               <tr>
-                <th>
+                <th className="col-select">
                   <input type="checkbox" />
                 </th>
-                <th>Descripción</th>
-                <th>Tipo</th>
-                <th>Categoría</th>
-                <th>Fecha</th>
-                <th>Monto</th>
-                <th>Estado</th>
-                <th>Acciones</th>
+                <th className="col-description">Descripción</th>
+                <th className="col-type">Tipo</th>
+                <th className="col-category">Categoría</th>
+                <th className="col-date">Fecha</th>
+                <th className="col-amount">Monto</th>
+                <th className="col-status">Estado</th>
+                <th className="col-actions">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {currentTransactions.map(transaction => (
                 <tr key={transaction.id} className="table-row">
-                  <td>
+                  <td className="col-select">
                     <input type="checkbox" />
                   </td>
-                  <td>
+                  <td className="col-description">
                     <div className="description-cell">
                       <span className="transaction-icon">
                         {transaction.type === 'ingreso' ? '📈' : '📉'}
@@ -133,25 +133,25 @@ export const TransactionList = ({ transactions, loading, onDeleteTransaction, on
                       <span className="description-text">{transaction.description}</span>
                     </div>
                   </td>
-                  <td>
+                  <td className="col-type">
                     <span className={`type-badge ${transaction.type}`}>
                       {transaction.type === 'ingreso' ? 'Ingreso' : 'Egreso'}
                     </span>
                   </td>
-                  <td>
+                  <td className="col-category">
                     <span className="category-badge">{transaction.category}</span>
                   </td>
-                  <td className="date-cell">{formatDate(transaction.date)}</td>
-                  <td>
+                  <td className="col-date date-cell">{formatDate(transaction.date)}</td>
+                  <td className="col-amount">
                     <span className={`amount ${transaction.type}`}>
                       {transaction.type === 'ingreso' ? '+' : '-'}
                       {formatCurrency(transaction.amount)}
                     </span>
                   </td>
-                  <td>
+                  <td className="col-status">
                     <span className="status-badge active">Activa</span>
                   </td>
-                  <td>
+                  <td className="col-actions">
                     <div className="action-buttons">
                       <button
                         onClick={() => onEditTransaction(transaction)}

@@ -73,51 +73,7 @@
   color: #6b7280;
 }
 
-/* Botones */
-.btn-primary,
-.btn-secondary,
-.btn-danger {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-.btn-secondary {
-  background: white;
-  color: #6b7280;
-  border: 1px solid #e5e7eb;
-}
-
-.btn-secondary:hover {
-  border-color: #667eea;
-  color: #667eea;
-}
-
-.btn-danger {
-  background: #ef4444;
-  color: white;
-}
-
-.btn-danger:hover {
-  background: #dc2626;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
-}
+/* Botones: usar Bootstrap .btn, .btn-primary, .btn-secondary, .btn-danger */
 
 /* Formulario de agregar categoría */
 .add-category-form {
@@ -630,7 +586,7 @@ input:checked + .slider:before {
     align-items: flex-start;
   }
 
-  .btn-secondary {
+  .btn-outline-secondary {
     width: 100%;
   }
 

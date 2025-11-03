@@ -308,7 +308,7 @@
 .credits-table-container {
   background: white;
   border-radius: 12px;
-  overflow: hidden;
+  overflow: hidden; /* default; overridden on small screens */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
@@ -690,36 +690,7 @@
   margin-top: 8px;
 }
 
-.btn-primary,
-.btn-secondary {
-  padding: 12px 24px;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 0.95rem;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  color: white;
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
-}
-
-.btn-secondary {
-  background: #e5e7eb;
-  color: var(--text-primary);
-}
-
-.btn-secondary:hover {
-  background: #d1d5db;
-}
+/* Eliminar estilos de .btn-* para evitar colisión con Bootstrap */
 
 /* Payments Modal */
 .payments-modal {
@@ -972,6 +943,7 @@
   .purchases-table-container,
   .credits-table-container {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .purchases-table,
@@ -993,9 +965,22 @@
     flex-direction: column;
   }
 
-  .btn-primary,
-  .btn-secondary {
+  .form-actions .btn {
     width: 100%;
+  }
+}
+
+/* Tablet responsiveness */
+@media (max-width: 1024px) {
+  .purchases-table-container,
+  .credits-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .purchases-table,
+  .credits-table {
+    min-width: 1000px;
   }
 }
 

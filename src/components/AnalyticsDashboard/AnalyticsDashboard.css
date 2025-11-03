@@ -1,7 +1,6 @@
 .analytics-dashboard {
-  padding: 20px;
-  max-width: 1400px;
-  margin: 0 auto;
+  padding: 24px 0 48px 0;
+  width: 100%;
 }
 
 .analytics-header {
@@ -268,7 +267,7 @@
 
 @media (max-width: 768px) {
   .analytics-dashboard {
-    padding: 15px;
+    padding: 16px 0 40px 0;
   }
 
   .analytics-header {

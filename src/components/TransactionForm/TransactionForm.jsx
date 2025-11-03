@@ -77,19 +77,20 @@ export const TransactionForm = ({ onAddTransaction, onUpdateTransaction, onClose
   return (
     <div className="transaction-form">
       <h3>{editingTransaction ? 'Editar Transacción' : 'Nueva Transacción'}</h3>
-      
+
       {error && (
-        <div className="form-error">
+        <div className="alert alert-danger d-flex align-items-start gap-2" role="alert">
           <span>⚠️</span>
-          <p>{error}</p>
+          <div>{error}</div>
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit}>
-        <div className="form-row">
-          <div className="form-group">
-            <label>Tipo</label>
+        <div className="row g-3">
+          <div className="col-md-6">
+            <label className="form-label">Tipo</label>
             <select
+              className="form-select"
               name="type"
               value={formData.type}
               onChange={handleChange}
@@ -100,9 +101,10 @@ export const TransactionForm = ({ onAddTransaction, onUpdateTransaction, onClose
             </select>
           </div>
 
-          <div className="form-group">
-            <label>Fecha</label>
+          <div className="col-md-6">
+            <label className="form-label">Fecha</label>
             <input
+              className="form-control"
               type="date"
               name="date"
               value={formData.date}
@@ -112,10 +114,11 @@ export const TransactionForm = ({ onAddTransaction, onUpdateTransaction, onClose
           </div>
         </div>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label>Categoría</label>
+        <div className="row g-3 mt-1">
+          <div className="col-md-6">
+            <label className="form-label">Categoría</label>
             <select
+              className="form-select"
               name="category"
               value={formData.category}
               onChange={handleChange}
@@ -128,9 +131,10 @@ export const TransactionForm = ({ onAddTransaction, onUpdateTransaction, onClose
             </select>
           </div>
 
-          <div className="form-group">
-            <label>Monto</label>
+          <div className="col-md-6">
+            <label className="form-label">Monto</label>
             <input
+              className="form-control"
               type="number"
               name="amount"
               value={formData.amount}
@@ -143,9 +147,10 @@ export const TransactionForm = ({ onAddTransaction, onUpdateTransaction, onClose
           </div>
         </div>
 
-        <div className="form-group">
-          <label>Descripción</label>
+        <div className="mt-3">
+          <label className="form-label">Descripción</label>
           <input
+            className="form-control"
             type="text"
             name="description"
             value={formData.description}
@@ -155,11 +160,11 @@ export const TransactionForm = ({ onAddTransaction, onUpdateTransaction, onClose
           />
         </div>
 
-        <div className="form-actions">
-          <button type="submit" disabled={loading} className="btn-submit">
+        <div className="d-flex gap-2 mt-4">
+          <button type="submit" disabled={loading} className="btn btn-primary">
             {loading ? 'Guardando...' : editingTransaction ? 'Actualizar Transacción' : 'Guardar Transacción'}
           </button>
-          <button type="button" onClick={onClose} className="btn-cancel">
+          <button type="button" onClick={onClose} className="btn btn-outline-secondary">
             Cancelar
           </button>
         </div>

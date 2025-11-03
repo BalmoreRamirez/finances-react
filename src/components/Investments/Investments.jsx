@@ -459,10 +459,10 @@ export const Investments = () => {
           </div>
 
           {/* Tabla de compras */}
-          <div className="purchases-table-container">
+          <div className="purchases-table-container table-responsive">
             {purchases.length > 0 ? (
               <>
-              <table className="purchases-table">
+              <table className="purchases-table table table-hover align-middle">
                 <thead>
                   <tr>
                     <th>Fecha</th>
@@ -544,7 +544,7 @@ export const Investments = () => {
                 <span className="empty-icon">📦</span>
                 <p>No hay compras registradas</p>
                 <button 
-                  className="btn-primary"
+                  className="btn btn-primary"
                   onClick={() => openNewModal('purchase')}
                 >
                   Registrar Primera Compra
@@ -627,10 +627,10 @@ export const Investments = () => {
           </div>
 
           {/* Tabla de créditos */}
-          <div className="credits-table-container">
+          <div className="credits-table-container table-responsive">
             {filteredCredits.length > 0 ? (
               <>
-              <table className="credits-table">
+              <table className="credits-table table table-hover align-middle">
                 <thead>
                   <tr>
                     <th>Fecha</th>
@@ -745,7 +745,7 @@ export const Investments = () => {
                 </p>
                 {credits.length === 0 && (
                   <button 
-                    className="btn-primary"
+                    className="btn btn-primary"
                     onClick={() => openNewModal('credit')}
                   >
                     Registrar Primer Crédito
@@ -848,10 +848,10 @@ export const Investments = () => {
                   )}
 
                   <div className="form-actions">
-                    <button type="button" className="btn-secondary" onClick={closeModal}>
+                    <button type="button" className="btn btn-outline-secondary" onClick={closeModal}>
                       Cancelar
                     </button>
-                    <button type="submit" className="btn-primary">
+                    <button type="submit" className="btn btn-primary">
                       {editingItem ? 'Actualizar' : 'Guardar'}
                     </button>
                   </div>
@@ -938,10 +938,10 @@ export const Investments = () => {
                   )}
 
                   <div className="form-actions">
-                    <button type="button" className="btn-secondary" onClick={closeModal}>
+                    <button type="button" className="btn btn-outline-secondary" onClick={closeModal}>
                       Cancelar
                     </button>
-                    <button type="submit" className="btn-primary">
+                    <button type="submit" className="btn btn-primary">
                       {editingItem ? 'Actualizar' : 'Guardar'}
                     </button>
                   </div>
@@ -1008,7 +1008,7 @@ export const Investments = () => {
                         placeholder="Descripción del pago..."
                       />
                     </div>
-                    <button type="submit" className="btn-primary">
+                    <button type="submit" className="btn btn-primary">
                       ➕ Agregar Pago
                     </button>
                   </form>
@@ -1045,7 +1045,7 @@ export const Investments = () => {
                   </div>
 
                   <div className="modal-actions">
-                    <button className="btn-secondary" onClick={closeModal}>
+                    <button className="btn btn-outline-secondary" onClick={closeModal}>
                       Cerrar
                     </button>
                   </div>

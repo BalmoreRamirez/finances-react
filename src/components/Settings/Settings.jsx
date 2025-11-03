@@ -89,7 +89,7 @@ export const Settings = () => {
               <h2>Gestión de Categorías</h2>
               <p className="section-subtitle">Administra las categorías de tus transacciones</p>
             </div>
-            <button onClick={handleResetCategories} className="btn-secondary">
+            <button onClick={handleResetCategories} className="btn btn-outline-secondary">
               🔄 Restaurar Predeterminadas
             </button>
           </div>
@@ -120,7 +120,7 @@ export const Settings = () => {
                 </div>
                 <div className="form-group">
                   <label style={{ opacity: 0 }}>.</label>
-                  <button type="submit" className="btn-primary">
+                  <button type="submit" className="btn btn-primary">
                     + Agregar
                   </button>
                 </div>
@@ -366,7 +366,7 @@ export const Settings = () => {
                   <label>Exportar Datos</label>
                   <p>Descarga todos tus datos en formato JSON</p>
                 </div>
-                <button className="btn-secondary">📥 Exportar</button>
+                <button className="btn btn-outline-secondary">📥 Exportar</button>
               </div>
 
               <div className="setting-item">
@@ -374,7 +374,7 @@ export const Settings = () => {
                   <label>Importar Datos</label>
                   <p>Importa datos desde un archivo JSON</p>
                 </div>
-                <button className="btn-secondary">📤 Importar</button>
+                <button className="btn btn-outline-secondary">📤 Importar</button>
               </div>
             </div>
           </div>
@@ -387,14 +387,14 @@ export const Settings = () => {
                   <h4>Restablecer Configuración</h4>
                   <p>Volver a la configuración predeterminada</p>
                 </div>
-                <button className="btn-danger">Restablecer</button>
+                <button className="btn btn-danger">Restablecer</button>
               </div>
               <div className="danger-item">
                 <div>
                   <h4>Eliminar Todas las Transacciones</h4>
                   <p>Esta acción no se puede deshacer</p>
                 </div>
-                <button className="btn-danger">Eliminar Todo</button>
+                <button className="btn btn-danger">Eliminar Todo</button>
               </div>
             </div>
           </div>
