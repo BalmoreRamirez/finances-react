@@ -72,13 +72,6 @@ export const Settings = () => {
           <span className="tab-icon">💼</span>
           <span>Tipos de Transacción</span>
         </button>
-        <button
-          className={`tab-btn ${activeTab === 'general' ? 'active' : ''}`}
-          onClick={() => setActiveTab('general')}
-        >
-          <span className="tab-icon">⚙️</span>
-          <span>General</span>
-        </button>
       </div>
 
       {/* Contenido de Categorías */}
@@ -295,111 +288,6 @@ export const Settings = () => {
         </div>
       )}
 
-      {/* Contenido de Configuración General */}
-      {activeTab === 'general' && (
-        <div className="settings-content">
-          <div className="section-header">
-            <div>
-              <h2>Configuración General</h2>
-              <p className="section-subtitle">Personaliza la aplicación según tus preferencias</p>
-            </div>
-          </div>
-
-          <div className="settings-groups">
-            <div className="setting-group">
-              <h3>Preferencias de Visualización</h3>
-              <div className="setting-item">
-                <div className="setting-info">
-                  <label>Moneda</label>
-                  <p>Selecciona la moneda para mostrar los montos</p>
-                </div>
-                <select defaultValue="USD">
-                  <option value="USD">USD - Dólar</option>
-                  <option value="EUR">EUR - Euro</option>
-                  <option value="MXN">MXN - Peso Mexicano</option>
-                  <option value="COP">COP - Peso Colombiano</option>
-                </select>
-              </div>
-
-              <div className="setting-item">
-                <div className="setting-info">
-                  <label>Formato de Fecha</label>
-                  <p>Cómo se mostrarán las fechas en la aplicación</p>
-                </div>
-                <select defaultValue="es-ES">
-                  <option value="es-ES">DD/MM/YYYY</option>
-                  <option value="en-US">MM/DD/YYYY</option>
-                  <option value="iso">YYYY-MM-DD</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="setting-group">
-              <h3>Notificaciones</h3>
-              <div className="setting-item">
-                <div className="setting-info">
-                  <label>Recordatorios</label>
-                  <p>Recibe recordatorios para registrar transacciones</p>
-                </div>
-                <label className="switch">
-                  <input type="checkbox" defaultChecked />
-                  <span className="slider"></span>
-                </label>
-              </div>
-
-              <div className="setting-item">
-                <div className="setting-info">
-                  <label>Alertas de Presupuesto</label>
-                  <p>Te avisaremos cuando te acerques a tu límite</p>
-                </div>
-                <label className="switch">
-                  <input type="checkbox" />
-                  <span className="slider"></span>
-                </label>
-              </div>
-            </div>
-
-            <div className="setting-group">
-              <h3>Datos y Privacidad</h3>
-              <div className="setting-item">
-                <div className="setting-info">
-                  <label>Exportar Datos</label>
-                  <p>Descarga todos tus datos en formato JSON</p>
-                </div>
-                <button className="btn btn-outline-secondary">📥 Exportar</button>
-              </div>
-
-              <div className="setting-item">
-                <div className="setting-info">
-                  <label>Importar Datos</label>
-                  <p>Importa datos desde un archivo JSON</p>
-                </div>
-                <button className="btn btn-outline-secondary">📤 Importar</button>
-              </div>
-            </div>
-          </div>
-
-          <div className="danger-zone">
-            <h3>⚠️ Zona de Peligro</h3>
-            <div className="danger-actions">
-              <div className="danger-item">
-                <div>
-                  <h4>Restablecer Configuración</h4>
-                  <p>Volver a la configuración predeterminada</p>
-                </div>
-                <button className="btn btn-danger">Restablecer</button>
-              </div>
-              <div className="danger-item">
-                <div>
-                  <h4>Eliminar Todas las Transacciones</h4>
-                  <p>Esta acción no se puede deshacer</p>
-                </div>
-                <button className="btn btn-danger">Eliminar Todo</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
