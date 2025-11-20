@@ -11,6 +11,7 @@ Una aplicación web moderna para el control de finanzas personales, desarrollada
 - 📱 **Diseño responsive** para móviles y desktop
 - 🔄 **Sincronización en tiempo real** con Firestore
 - 🎨 **Interfaz moderna** y amigable
+- 📲 **Aplicación instalable (PWA)** con funcionamiento offline
 
 ## 📋 Categorías
 
@@ -94,6 +95,22 @@ npm run dev      # Inicia servidor de desarrollo
 npm run build    # Construye para producción
 npm run preview  # Preview de build de producción
 ```
+
+## 📲 Instalación como PWA
+
+1. Abre la app en tu navegador (Chrome, Edge, Safari móvil, etc.).
+2. Haz clic en **“Instalar aplicación”** o en el icono de descarga en la barra del navegador.
+3. Confirma la instalación para tener la app en tu escritorio o pantalla de inicio.
+
+### Funcionamiento offline
+
+- La app precachea los recursos críticos al primer uso, permitiendo consultar tu información incluso sin conexión.
+- Cuando exista una nueva versión, se descargará en segundo plano y se activará al recargar.
+
+### Desarrollo
+
+- El modo desarrollo ejecuta un service worker provisional (gracias a `vite-plugin-pwa`).
+- Si necesitas reiniciar el SW, limpia la caché de la app desde las DevTools.
 
 ---
 
