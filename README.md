@@ -12,6 +12,7 @@ Una aplicación web moderna para el control de finanzas personales, desarrollada
 - 🔄 **Sincronización en tiempo real** con Firestore
 - 🎨 **Interfaz moderna** y amigable
 - 📲 **Aplicación instalable (PWA)** con funcionamiento offline
+- 🧾 **Flujo contable validado** por cuentas (Activos, Pasivos, Patrimonio, Ingresos, Gastos)
 
 ## 📋 Categorías
 
@@ -111,6 +112,22 @@ npm run preview  # Preview de build de producción
 
 - El modo desarrollo ejecuta un service worker provisional (gracias a `vite-plugin-pwa`).
 - Si necesitas reiniciar el SW, limpia la caché de la app desde las DevTools.
+
+## 🧾 Plan de cuentas y flujo contable
+
+Cada transacción y movimiento de inversión se valida contra el plan base de cuentas:
+
+| Tipo | Descripción |
+| --- | --- |
+| **Activos** | Lo que tenés disponible (efectivo, bancos, saldos) |
+| **Pasivos** | Lo que debés (créditos u obligaciones) |
+| **Patrimonio** | Tu capital dentro del sistema |
+| **Ingresos** | Lo que ganás |
+| **Gastos** | Lo que gastás |
+
+- Las transacciones obligan a definir cuenta de origen y destino para validar el flujo.
+- Las inversiones mueven el capital desde Activos hacia **Inversiones · Capital** y registran la ganancia en **Inversiones · Ganancias**.
+- El módulo **Cuentas** muestra el balance actual, entradas/salidas por cuenta y advertencias si se usaron asignaciones automáticas.
 
 ---
 

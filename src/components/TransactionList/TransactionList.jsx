@@ -113,6 +113,8 @@ export const TransactionList = ({ transactions, loading, onDeleteTransaction, on
                 <th className="col-description">Descripción</th>
                 <th className="col-type">Tipo</th>
                 <th className="col-category">Categoría</th>
+                <th className="col-account">Cuenta origen</th>
+                <th className="col-account">Cuenta destino</th>
                 <th className="col-date">Fecha</th>
                 <th className="col-amount">Monto</th>
                 <th className="col-status">Estado</th>
@@ -140,6 +142,18 @@ export const TransactionList = ({ transactions, loading, onDeleteTransaction, on
                   </td>
                   <td className="col-category">
                     <span className="category-badge">{transaction.category}</span>
+                  </td>
+                  <td className="col-account">
+                    <div className="account-flow from">
+                      <span className="account-flow-label">Sale de</span>
+                      <span className="account-flow-name">{transaction.fromAccountName || 'No asignada'}</span>
+                    </div>
+                  </td>
+                  <td className="col-account">
+                    <div className="account-flow to">
+                      <span className="account-flow-label">Llega a</span>
+                      <span className="account-flow-name">{transaction.toAccountName || 'No asignada'}</span>
+                    </div>
                   </td>
                   <td className="col-date date-cell">{formatDate(transaction.date)}</td>
                   <td className="col-amount">
@@ -207,6 +221,16 @@ export const TransactionList = ({ transactions, loading, onDeleteTransaction, on
               <div className="card-meta">
                 <span className="category-badge">{transaction.category}</span>
                 <span className="date-text">{formatDate(transaction.date)}</span>
+              </div>
+              <div className="card-accounts">
+                <div className="account-pill from">
+                  <span>Sale de</span>
+                  <strong>{transaction.fromAccountName || 'No asignada'}</strong>
+                </div>
+                <div className="account-pill to">
+                  <span>Llega a</span>
+                  <strong>{transaction.toAccountName || 'No asignada'}</strong>
+                </div>
               </div>
               <div className="card-amount">
                 <span className={`amount ${transaction.type}`}>

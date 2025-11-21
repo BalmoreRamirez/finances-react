@@ -12,6 +12,24 @@ import {
 import { db } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
 import { parseDateYMDToSVMidnightUTC } from '../utils/dateTZ';
+import { getAccountById, TRANSACTION_ACCOUNT_DEFAULTS } from '../services/accounts';
+
+const buildAccountMetadata = (transaction) => {
+  const defaults = TRANSACTION_ACCOUNT_DEFAULTS[transaction.type] || {};
+  const fromAccountId = transaction.fromAccountId || defaults.from || null;
+  const toAccountId = transaction.toAccountId || defaults.to || null;
+  const fromAccount = fromAccountId ? getAccountById(fromAccountId) : null;
+  const toAccount = toAccountId ? getAccountById(toAccountId) : null;
+
+  return {
+    fromAccountId,
+    toAccountId,
+    fromAccountName: fromAccount ? fromAccount.label : transaction.fromAccountName || null,
+    toAccountName: toAccount ? toAccount.label : transaction.toAccountName || null,
+    fromAccountCategory: fromAccount ? fromAccount.categoryKey : transaction.fromAccountCategory || null,
+    toAccountCategory: toAccount ? toAccount.categoryKey : transaction.toAccountCategory || null,
+  };
+};
 
 export const useTransactions = () => {
   const [transactions, setTransactions] = useState([]);
@@ -34,10 +52,14 @@ export const useTransactions = () => {
     const unsubscribe = onSnapshot(
       q, 
       (snapshot) => {
-        const transactionsData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
+        const transactionsData = snapshot.docs.map(docSnapshot => {
+          const data = docSnapshot.data();
+          return {
+            id: docSnapshot.id,
+            ...data,
+            ...buildAccountMetadata(data),
+          };
+        });
         
         // Ordenar manualmente por fecha (descendente)
         transactionsData.sort((a, b) => {
@@ -67,6 +89,7 @@ export const useTransactions = () => {
       const nowIso = new Date().toISOString();
       await addDoc(collection(db, 'transactions'), {
         ...transaction,
+        ...buildAccountMetadata(transaction),
         userId: user.uid,
         date: normalizedDate,
         createdAt: nowIso
@@ -103,6 +126,7 @@ export const useTransactions = () => {
       const nowIso = new Date().toISOString();
       await updateDoc(transactionRef, {
         ...transaction,
+        ...buildAccountMetadata(transaction),
         date: normalizedDate,
         updatedAt: nowIso
       });

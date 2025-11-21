@@ -4,6 +4,7 @@ export const Sidebar = ({ currentView, onViewChange, onLogout, userEmail }) => {
   const menuItems = [
     { id: 'dashboard', icon: '📊', label: 'Dashboard', view: 'dashboard', accent: '#6366f1', soft: '#eef2ff' },
     { id: 'transactions', icon: '💳', label: 'Transacciones', view: 'transactions', accent: '#f97316', soft: '#fef3c7' },
+    { id: 'accounts', icon: '🏦', label: 'Cuentas', view: 'accounts', accent: '#0ea5e9', soft: '#e0f2fe' },
     { id: 'investments', icon: '💎', label: 'Inversiones', view: 'investments', accent: '#10b981', soft: '#d1fae5' },
     { id: 'analytics', icon: '📈', label: 'Análisis', view: 'analytics', accent: '#8b5cf6', soft: '#ede9fe' },
     { id: 'settings', icon: '⚙️', label: 'Configuración', view: 'settings', accent: '#f59e0b', soft: '#fef3c7' },

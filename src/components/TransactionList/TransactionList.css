@@ -179,6 +179,10 @@
   width: 40px;
 }
 
+.transactions-table .col-account {
+  min-width: 170px;
+}
+
 .transactions-table tbody tr {
   border-bottom: 1px solid #e5e7eb;
   transition: background 0.2s;
@@ -241,6 +245,26 @@
   font-size: 13px;
   color: #4b5563;
   font-weight: 500;
+}
+
+.account-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.account-flow-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #9ca3af;
+}
+
+.account-flow-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+  line-height: 1.2;
 }
 
 .date-cell {
@@ -369,6 +393,45 @@
   gap: 12px;
   margin-bottom: 16px;
   flex-wrap: wrap;
+}
+
+.card-accounts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.account-pill {
+  background: #f3f4f6;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  min-width: 150px;
+}
+
+.account-pill span {
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: #9ca3af;
+}
+
+.account-pill strong {
+  font-weight: 600;
+  color: #111827;
+}
+
+.account-pill.from {
+  background: #ecfeff;
+  border: 1px solid #67e8f9;
+}
+
+.account-pill.to {
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
 }
 
 .date-text {

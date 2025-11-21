@@ -9,6 +9,7 @@ import { ErrorBanner } from '../ErrorBanner/ErrorBanner';
 import { AnalyticsDashboard } from '../AnalyticsDashboard/AnalyticsDashboard';
 import { Settings } from '../Settings/Settings';
 import { Investments } from '../Investments/Investments';
+import { Accounts } from '../Accounts/Accounts';
 import './Dashboard.css';
 
 export const Dashboard = () => {
@@ -299,6 +300,20 @@ export const Dashboard = () => {
               subtitle="Gestiona tus compras y créditos con seguimiento detallado"
             />
             <Investments />
+          </>
+        );
+
+      case 'accounts':
+        return (
+          <>
+            <Header 
+              title="Cuentas contables" 
+              subtitle="Valida cómo circula el dinero entre Activos, Pasivos, Patrimonio, Ingresos y Gastos"
+            />
+            <Accounts 
+              transactions={transactions}
+              transactionsLoading={loading}
+            />
           </>
         );
 

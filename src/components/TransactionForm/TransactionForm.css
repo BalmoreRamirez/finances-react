@@ -45,6 +45,10 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
+.transaction-form small.text-muted {
+  display: block;
+  margin-top: 4px;
+}
   margin-bottom: 20px;
 }
 
