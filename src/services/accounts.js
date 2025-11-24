@@ -295,25 +295,42 @@ export const summarizeAccountBalances = ({
 	purchases.forEach((purchase) => {
 		const capital = Number(purchase.investment) || 0;
 		const salePrice = Number(purchase.salePrice) || 0;
+		const profit = salePrice - capital;
+
 		if (capital > 0) {
 			applyMovement(ledger, 'activos-disponibles', 'inversion-capital', capital);
 		}
 
-		const profit = salePrice - capital;
+		if (salePrice > 0) {
+			const principalRecovered = Math.min(capital, salePrice);
+			if (principalRecovered > 0) {
+				applyMovement(ledger, 'inversion-capital', 'activos-disponibles', principalRecovered);
+			}
+		}
+
 		if (profit > 0) {
+			applyMovement(ledger, 'inversion-capital', 'inversion-ganancias', profit);
 			investmentProfitTotal += profit;
 		}
 	});
 
 	credits.forEach((credit) => {
 		const principal = Number(credit.principalAmount) || 0;
+		const totalPaid = Number(credit.totalPaid) || 0;
+		const profitEarned = Math.max(0, totalPaid - principal);
+		const principalRecovered = Math.min(totalPaid, principal);
+
 		if (principal > 0) {
-			applyMovement(ledger, 'activos-disponibles', 'pasivos-obligaciones', principal);
+			applyMovement(ledger, 'activos-disponibles', 'inversion-capital', principal);
 		}
 
-		const totalPaid = Number(credit.totalPaid) || 0;
-		if (totalPaid > 0) {
-			applyMovement(ledger, 'pasivos-obligaciones', 'activos-disponibles', totalPaid);
+		if (principalRecovered > 0) {
+			applyMovement(ledger, 'inversion-capital', 'activos-disponibles', principalRecovered);
+		}
+
+		if (profitEarned > 0) {
+			applyMovement(ledger, 'inversion-capital', 'inversion-ganancias', profitEarned);
+			investmentProfitTotal += profitEarned;
 		}
 	});
 
