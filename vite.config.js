@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['vite.svg'],
+      includeAssets: ['finance-icon.svg', 'finance-icon-maskable.svg'],
       devOptions: {
         enabled: true,
       },
@@ -23,10 +23,16 @@ export default defineConfig({
         orientation: 'portrait-primary',
         icons: [
           {
-            src: 'vite.svg',
+            src: 'finance-icon.svg',
             sizes: 'any',
             type: 'image/svg+xml',
             purpose: 'any',
+          },
+          {
+            src: 'finance-icon-maskable.svg',
+            sizes: 'any',
+            type: 'image/svg+xml',
+            purpose: 'maskable',
           },
         ],
       },

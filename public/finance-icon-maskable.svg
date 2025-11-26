@@ -1,0 +1,27 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Finances App Maskable Icon</title>
+  <desc id="desc">Maskable variant with extra padding around financial emblem.</desc>
+  <defs>
+    <linearGradient id="maskable-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1d4ed8" />
+    </linearGradient>
+    <linearGradient id="maskable-panel" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e3a8a" />
+      <stop offset="100%" stop-color="#1d4ed8" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#maskable-bg)" />
+  <rect x="96" y="136" width="320" height="256" rx="72" fill="url(#maskable-panel)" stroke="#93c5fd" stroke-width="8" opacity="0.9" />
+  <g fill="#34d399">
+    <rect x="188" y="226" width="32" height="116" rx="16" />
+    <rect x="244" y="198" width="32" height="144" rx="16" />
+    <rect x="300" y="242" width="32" height="100" rx="16" />
+  </g>
+  <path d="M184 330c40-32 84-48 132-48 30 0 60 8 90 22" fill="none" stroke="#e0f2fe" stroke-width="12" stroke-linecap="round" opacity="0.8" />
+  <g transform="translate(0 -12)">
+    <circle cx="360" cy="164" r="68" fill="#facc15" />
+    <path d="M360 128v72" stroke="#a16207" stroke-width="12" stroke-linecap="round" />
+    <path d="M332 164h56" stroke="#a16207" stroke-width="12" stroke-linecap="round" />
+  </g>
+</svg>
