@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
+import Swal from 'sweetalert2';
 import './TransactionForm.css';
 import { todayYMDInSV } from '../../utils/dateTZ';
 import { useAccounts } from '../../hooks/useAccounts';
 import { TRANSACTION_ACCOUNT_DEFAULTS } from '../../services/accounts';
 
-export const TransactionForm = ({ onAddTransaction, onUpdateTransaction, onClose, editingTransaction }) => {
+export const TransactionForm = ({ onAddTransaction, onUpdateTransaction, onClose, editingTransaction, availableBalance = 0 }) => {
   const { getAllowedAccounts, validateAccountFlow, getAccountById } = useAccounts();
   const defaultFlow = TRANSACTION_ACCOUNT_DEFAULTS.egreso;
 
@@ -20,6 +21,15 @@ export const TransactionForm = ({ onAddTransaction, onUpdateTransaction, onClose
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [flowError, setFlowError] = useState('');
+  const currencyFormatter = useMemo(() => new Intl.NumberFormat('es-ES', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 2,
+  }), []);
+  const previousExpenseAmount = editingTransaction?.type === 'egreso'
+    ? Number(editingTransaction.amount) || 0
+    : 0;
+  const availableForExpense = Math.max(0, (Number(availableBalance) || 0) + previousExpenseAmount);
 
   // Cargar datos de la transacción al editar
   useEffect(() => {
@@ -94,6 +104,21 @@ export const TransactionForm = ({ onAddTransaction, onUpdateTransaction, onClose
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    if (formData.type === 'egreso') {
+      const amountValue = Number(formData.amount) || 0;
+      if (amountValue > availableForExpense) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Saldo insuficiente',
+          text: `Podés gastar hasta ${currencyFormatter.format(availableForExpense)}.`,
+          confirmButtonText: 'Entendido',
+        });
+        setError(`Saldo insuficiente: podés gastar hasta ${currencyFormatter.format(availableForExpense)}.`);
+        setLoading(false);
+        return;
+      }
+    }
 
     const validation = validateAccountFlow({
       movementType: formData.type,
@@ -216,6 +241,11 @@ export const TransactionForm = ({ onAddTransaction, onUpdateTransaction, onClose
               required
               placeholder="0.00"
             />
+            {formData.type === 'egreso' && (
+              <small className="text-muted d-block mt-1">
+                Saldo disponible: {currencyFormatter.format(availableForExpense)}
+              </small>
+            )}
           </div>
         </div>
 

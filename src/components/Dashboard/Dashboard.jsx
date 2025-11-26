@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useTransactions } from '../../hooks/useTransactions';
+import { useAccounts } from '../../hooks/useAccounts';
 import { Sidebar } from '../Sidebar/Sidebar';
 import { Header } from '../Header/Header';
 import { TransactionForm } from '../TransactionForm/TransactionForm';
@@ -11,10 +12,13 @@ import { Settings } from '../Settings/Settings';
 import { Investments } from '../Investments/Investments';
 import { Accounts } from '../Accounts/Accounts';
 import './Dashboard.css';
+import { useInvestments } from '../../hooks/useInvestments';
 
 export const Dashboard = () => {
   const { user, logout } = useAuth();
   const { transactions, loading, addTransaction, updateTransaction, deleteTransaction, getBalance } = useTransactions();
+  const { summarizeAccountBalances } = useAccounts();
+  const { purchases, credits } = useInvestments(user?.uid);
   const [showForm, setShowForm] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [showErrorBanner, setShowErrorBanner] = useState(false);
@@ -86,6 +90,17 @@ export const Dashboard = () => {
   };
 
   const balance = getBalance();
+  const ledgerSummary = useMemo(() => summarizeAccountBalances({
+    transactions,
+    purchases,
+    credits,
+  }), [transactions, purchases, credits, summarizeAccountBalances]);
+
+  const activeAccountBalance = useMemo(() => {
+    const activeAccount = ledgerSummary.accounts.find((account) => account.id === 'activos-disponibles');
+    return Math.max(0, activeAccount?.balance || 0);
+  }, [ledgerSummary]);
+
   const formatCurrency = (value) => new Intl.NumberFormat('es-ES', {
     style: 'currency',
     currency: 'USD'
@@ -268,6 +283,7 @@ export const Dashboard = () => {
                   onUpdateTransaction={handleUpdateTransaction}
                   onClose={handleCloseForm}
                   editingTransaction={editingTransaction}
+                  availableBalance={activeAccountBalance}
                 />
               </div>
             )}
@@ -299,7 +315,7 @@ export const Dashboard = () => {
               title="Inversiones" 
               subtitle="Gestiona tus compras y créditos con seguimiento detallado"
             />
-            <Investments />
+            <Investments transactions={transactions} />
           </>
         );
 

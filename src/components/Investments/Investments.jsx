@@ -1,11 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useInvestments } from '../../hooks/useInvestments';
 import { useAuth } from '../../context/AuthContext';
 import html2canvas from 'html2canvas';
 import './Investments.css';
 import { formatDateSV, todayYMDInSV } from '../../utils/dateTZ';
+import { summarizeAccountBalances } from '../../services/accounts';
+import Swal from 'sweetalert2';
 
-export const Investments = () => {
+export const Investments = ({ transactions = [] }) => {
   const { user } = useAuth();
   const {
     purchases,
@@ -66,6 +68,30 @@ export const Investments = () => {
     date: todayYMDInSV(),
     description: ''
   });
+  const ledgerSnapshot = useMemo(() => summarizeAccountBalances({
+    transactions,
+    purchases,
+    credits,
+  }), [transactions, purchases, credits]);
+  const activosAccount = ledgerSnapshot.accounts.find((account) => account.id === 'activos-disponibles');
+  const liquidBalance = Math.max(0, activosAccount?.balance || 0);
+  const showAlert = (options) => Swal.fire({
+    confirmButtonText: 'Aceptar',
+    ...options,
+  });
+  const formatCurrency = (value) => new Intl.NumberFormat('es-ES', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 2
+  }).format(value || 0);
+  const previousPurchaseAmount = editingItem && typeof editingItem.investment !== 'undefined'
+    ? Number(editingItem.investment) || 0
+    : 0;
+  const previousCreditAmount = editingItem && typeof editingItem.principalAmount !== 'undefined'
+    ? Number(editingItem.principalAmount) || 0
+    : 0;
+  const availableForPurchase = Math.max(0, liquidBalance + previousPurchaseAmount);
+  const availableForCredit = Math.max(0, liquidBalance + previousCreditAmount);
 
   // Efecto para actualizar el crédito seleccionado cuando cambian los créditos
   useEffect(() => {
@@ -107,7 +133,20 @@ export const Investments = () => {
     const salePrice = parseFloat(purchaseForm.salePrice);
 
     if (!purchaseForm.productName || investment <= 0 || salePrice <= 0) {
-      alert('Por favor completa todos los campos correctamente');
+      showAlert({
+        icon: 'warning',
+        title: 'Datos incompletos',
+        text: 'Por favor completa todos los campos correctamente.',
+      });
+      return;
+    }
+
+    if (investment > availableForPurchase) {
+      showAlert({
+        icon: 'warning',
+        title: 'Saldo insuficiente',
+        text: `Puedes invertir hasta ${formatCurrency(availableForPurchase)}.`,
+      });
       return;
     }
 
@@ -131,7 +170,11 @@ export const Investments = () => {
       setShowModal(false);
       setEditingItem(null);
     } else {
-      alert('Error al guardar la compra: ' + result.error);
+      showAlert({
+        icon: 'error',
+        title: 'Error al guardar',
+        text: result.error || 'No se pudo guardar la compra.',
+      });
     }
   };
 
@@ -162,7 +205,11 @@ export const Investments = () => {
     if (window.confirm('¿Estás seguro de eliminar esta compra?')) {
       const result = await deletePurchase(purchaseId);
       if (!result.success) {
-        alert('Error al eliminar: ' + result.error);
+        showAlert({
+          icon: 'error',
+          title: 'Error al eliminar',
+          text: result.error || 'No se pudo eliminar la compra.',
+        });
       }
     }
   };
@@ -174,7 +221,20 @@ export const Investments = () => {
     const rate = parseFloat(creditForm.interestRate);
 
     if (!creditForm.clientName || principal <= 0 || rate < 0) {
-      alert('Por favor completa todos los campos correctamente');
+      showAlert({
+        icon: 'warning',
+        title: 'Datos incompletos',
+        text: 'Por favor completa todos los campos correctamente.',
+      });
+      return;
+    }
+
+    if (principal > availableForCredit) {
+      showAlert({
+        icon: 'warning',
+        title: 'Saldo insuficiente',
+        text: `Puedes prestar hasta ${formatCurrency(availableForCredit)}.`,
+      });
       return;
     }
 
@@ -201,7 +261,11 @@ export const Investments = () => {
       setShowModal(false);
       setEditingItem(null);
     } else {
-      alert('Error al guardar el crédito: ' + result.error);
+      showAlert({
+        icon: 'error',
+        title: 'Error al guardar',
+        text: result.error || 'No se pudo guardar el crédito.',
+      });
     }
   };
 
@@ -232,7 +296,11 @@ export const Investments = () => {
     if (window.confirm('¿Estás seguro de eliminar este crédito?')) {
       const result = await deleteCredit(creditId);
       if (!result.success) {
-        alert('Error al eliminar: ' + result.error);
+        showAlert({
+          icon: 'error',
+          title: 'Error al eliminar',
+          text: result.error || 'No se pudo eliminar el crédito.',
+        });
       }
     }
   };
@@ -254,7 +322,11 @@ export const Investments = () => {
     const amount = parseFloat(paymentForm.amount);
 
     if (!amount || amount <= 0) {
-      alert('Por favor ingresa un monto válido');
+      showAlert({
+        icon: 'warning',
+        title: 'Monto inválido',
+        text: 'Por favor ingresa un monto válido para el pago.',
+      });
       return;
     }
 
@@ -273,7 +345,11 @@ export const Investments = () => {
       });
       // El useEffect se encargará de actualizar selectedCredit automáticamente
     } else {
-      alert('Error al registrar pago: ' + result.error);
+      showAlert({
+        icon: 'error',
+        title: 'Error al registrar pago',
+        text: result.error || 'No se pudo registrar el pago.',
+      });
     }
   };
 
@@ -283,7 +359,11 @@ export const Investments = () => {
     const result = await deletePayment(selectedCredit.id, paymentIndex);
 
     if (!result.success) {
-      alert('Error al eliminar pago: ' + result.error);
+      showAlert({
+        icon: 'error',
+        title: 'Error al eliminar pago',
+        text: result.error || 'No se pudo eliminar el pago.',
+      });
     }
     // El useEffect se encargará de actualizar selectedCredit automáticamente
   };
@@ -334,7 +414,11 @@ export const Investments = () => {
       }
     } catch (error) {
       console.error('Error generando reporte:', error);
-      alert('Error al generar el reporte');
+      showAlert({
+        icon: 'error',
+        title: 'Error en reporte',
+        text: 'No se pudo generar el reporte, intenta nuevamente.',
+      });
       setShowReportModal(false);
       setGeneratingReport(false);
     }
@@ -796,6 +880,9 @@ export const Investments = () => {
                         placeholder="0.00"
                         required
                       />
+                      <small className="text-muted">
+                        Puedes invertir hasta {formatCurrency(availableForPurchase)}
+                      </small>
                     </div>
 
                     <div className="form-group">
@@ -883,6 +970,9 @@ export const Investments = () => {
                         placeholder="0.00"
                         required
                       />
+                      <small className="text-muted">
+                        Puedes prestar hasta {formatCurrency(availableForCredit)}
+                      </small>
                     </div>
 
                     <div className="form-group">

@@ -7,11 +7,17 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import './AnalyticsDashboard.css';
 import { formatDateSV, parseDateYMDToSVMidnightUTC, todayYMDInSV } from '../../utils/dateTZ';
+import { useAuth } from '../../context/AuthContext';
+import { useInvestments } from '../../hooks/useInvestments';
+import { useAccounts } from '../../hooks/useAccounts';
 
 export const AnalyticsDashboard = ({ transactions }) => {
   const [period, setPeriod] = useState('mes');
   const [exporting, setExporting] = useState(false);
   const dashboardRef = useRef(null);
+  const { user } = useAuth();
+  const { purchases, credits, loading: investmentsLoading } = useInvestments(user?.uid);
+  const { summarizeAccountBalances } = useAccounts();
 
   const COLORS = {
     ingreso: '#48bb78',
@@ -211,6 +217,78 @@ export const AnalyticsDashboard = ({ transactions }) => {
     }
   };
 
+  const accountsSummary = useMemo(() => {
+    return summarizeAccountBalances({
+      transactions,
+      purchases,
+      credits,
+    });
+  }, [transactions, purchases, credits, summarizeAccountBalances]);
+
+  const normalizedAccounts = useMemo(() => {
+    if (!accountsSummary?.accounts) return [];
+    return accountsSummary.accounts.map(account =>
+      account.id === 'inversion-ganancias'
+        ? {
+            ...account,
+            balance: accountsSummary.investmentProfitTotal,
+            inflows: accountsSummary.investmentProfitTotal,
+            outflows: 0,
+          }
+        : account
+    );
+  }, [accountsSummary]);
+
+  const accountHighlights = useMemo(() => {
+    return [...normalizedAccounts]
+      .sort((a, b) => Math.abs(b.balance) - Math.abs(a.balance))
+      .slice(0, 4);
+  }, [normalizedAccounts]);
+
+  const transactionInsights = useMemo(() => {
+    const total = filteredTransactions.length;
+    const volume = filteredTransactions.reduce((sum, t) => sum + Math.abs(parseFloat(t.amount) || 0), 0);
+    const avg = total ? volume / total : 0;
+
+    const largestIncome = filteredTransactions
+      .filter(t => t.type === 'ingreso')
+      .reduce((prev, current) => (prev && parseFloat(prev.amount) > parseFloat(current.amount) ? prev : current), null);
+
+    const largestExpense = filteredTransactions
+      .filter(t => t.type === 'egreso')
+      .reduce((prev, current) => (prev && parseFloat(prev.amount) > parseFloat(current.amount) ? prev : current), null);
+
+    const dominantCategory = pieChartData[0] || null;
+
+    return {
+      total,
+      avg,
+      largestIncome,
+      largestExpense,
+      dominantCategory,
+    };
+  }, [filteredTransactions, pieChartData]);
+
+  const investmentOverview = useMemo(() => {
+    const totalCapital = purchases.reduce((sum, purchase) => sum + (Number(purchase.investment) || 0), 0);
+    const totalRecovered = purchases.reduce((sum, purchase) => sum + (Number(purchase.salePrice) || 0), 0);
+    const profit = totalRecovered - totalCapital;
+    const roi = totalCapital > 0 ? (profit / totalCapital) * 100 : 0;
+    const activeCredits = credits.filter(credit => credit.status !== 'completed');
+    const outstandingCredits = credits.reduce((sum, credit) => sum + (Number(credit.remainingBalance) || 0), 0);
+    const totalCreditRecovered = credits.reduce((sum, credit) => sum + (Number(credit.totalPaid) || 0), 0);
+
+    return {
+      totalCapital,
+      totalRecovered,
+      profit,
+      roi,
+      activeCredits: activeCredits.length,
+      outstandingCredits,
+      totalCreditRecovered,
+    };
+  }, [purchases, credits]);
+
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('es-SV', {
       style: 'currency',
@@ -298,6 +376,114 @@ export const AnalyticsDashboard = ({ transactions }) => {
               <p className="amount">{totals.savingsRate.toFixed(1)}%</p>
             </div>
           </div>
+        </div>
+
+        {/* Informe consolidado */}
+        <div className="report-grid">
+          <section className="report-card accounts-report">
+            <header className="report-card-header">
+              <div>
+                <p className="report-eyebrow">Cuentas</p>
+                <h3>Salud contable</h3>
+              </div>
+              <span className="report-tag">Neto {formatCurrency(accountsSummary?.totals?.net || 0)}</span>
+            </header>
+            <p className="report-description">
+              Balancea tus activos, pasivos, patrimonio e inversiones en un vistazo.
+            </p>
+            <div className="accounts-highlight-grid">
+              {accountHighlights.map(account => (
+                <article key={account.id} className="account-highlight">
+                  <div>
+                    <p className="account-label">{account.label}</p>
+                    <strong>{formatCurrency(account.balance)}</strong>
+                  </div>
+                  <small>
+                    Entradas {formatCurrency(account.inflows)} · Salidas {formatCurrency(account.outflows)}
+                  </small>
+                </article>
+              ))}
+            </div>
+            <footer className="report-footnote">
+              Entradas totales {formatCurrency(accountsSummary?.totals?.debits || 0)} · Salidas totales {formatCurrency(accountsSummary?.totals?.credits || 0)}
+            </footer>
+          </section>
+
+          <section className="report-card transactions-report">
+            <header className="report-card-header">
+              <div>
+                <p className="report-eyebrow">Transacciones</p>
+                <h3>Actividad reciente</h3>
+              </div>
+              <span className="report-tag">{transactionInsights.total} movimientos</span>
+            </header>
+            <p className="report-description">
+              Detecta patrones rápidos sobre tus ingresos y egresos.
+            </p>
+            <ul className="insights-list">
+              <li>
+                <span>Ticket promedio</span>
+                <strong>{formatCurrency(transactionInsights.avg)}</strong>
+              </li>
+              <li>
+                <span>Mayor ingreso</span>
+                <strong>
+                  {transactionInsights.largestIncome
+                    ? `${transactionInsights.largestIncome.description} · ${formatCurrency(transactionInsights.largestIncome.amount)}`
+                    : '—'}
+                </strong>
+              </li>
+              <li>
+                <span>Mayor egreso</span>
+                <strong>
+                  {transactionInsights.largestExpense
+                    ? `${transactionInsights.largestExpense.description} · ${formatCurrency(transactionInsights.largestExpense.amount)}`
+                    : '—'}
+                </strong>
+              </li>
+              <li>
+                <span>Categoría dominante</span>
+                <strong>
+                  {transactionInsights.dominantCategory
+                    ? `${transactionInsights.dominantCategory.name} (${((transactionInsights.dominantCategory.value / (totals.expense || 1)) * 100).toFixed(1)}%)`
+                    : '—'}
+                </strong>
+              </li>
+            </ul>
+          </section>
+
+          <section className="report-card investments-report">
+            <header className="report-card-header">
+              <div>
+                <p className="report-eyebrow">Inversiones</p>
+                <h3>Capital y créditos</h3>
+              </div>
+              <span className="report-tag">ROI {investmentOverview.roi.toFixed(1)}%</span>
+            </header>
+            {investmentsLoading ? (
+              <div className="report-loading">Cargando datos de inversiones...</div>
+            ) : (
+              <div className="investment-grid">
+                <div>
+                  <p className="report-metric-label">Capital invertido</p>
+                  <strong className="report-metric-value">{formatCurrency(investmentOverview.totalCapital)}</strong>
+                  <small>Recuperado: {formatCurrency(investmentOverview.totalRecovered)}</small>
+                </div>
+                <div>
+                  <p className="report-metric-label">Ganancia acumulada</p>
+                  <strong className={`report-metric-value ${investmentOverview.profit >= 0 ? 'positive' : 'negative'}`}>
+                    {formatCurrency(investmentOverview.profit)}
+                  </strong>
+                  <small>Créditos activos: {investmentOverview.activeCredits}</small>
+                </div>
+                <div>
+                  <p className="report-metric-label">Créditos por cobrar</p>
+                  <strong className="report-metric-value">{formatCurrency(investmentOverview.outstandingCredits)}</strong>
+                  <small>Pagado: {formatCurrency(investmentOverview.totalCreditRecovered)}</small>
+                </div>
+              </div>
+            )}
+          </section>
         </div>
 
         {/* Gráficas */}

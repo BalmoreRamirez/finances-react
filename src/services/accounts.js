@@ -312,8 +312,19 @@ export const summarizeAccountBalances = ({
 		}
 
 		const totalPaid = Number(credit.totalPaid) || 0;
-		if (totalPaid > 0) {
-			applyMovement(ledger, 'pasivos-obligaciones', 'activos-disponibles', totalPaid);
+		const principalRepaid = Math.min(totalPaid, principal);
+		if (principalRepaid > 0) {
+			applyMovement(ledger, 'pasivos-obligaciones', 'activos-disponibles', principalRepaid);
+		}
+
+		const interestAmount = Number(credit.interestAmount) || 0;
+		const interestRecognized = Boolean(
+			credit.interestTransactionId ||
+			credit.interestRouteVersion ||
+			(credit.status === 'completed' && interestAmount > 0)
+		);
+		if (interestAmount > 0 && interestRecognized) {
+			investmentProfitTotal += interestAmount;
 		}
 	});
 

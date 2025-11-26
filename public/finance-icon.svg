@@ -1,0 +1,14 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Finance App Icon</title>
+  <desc id="desc">Minimal badge with bars and coin for the finances app.</desc>
+  <rect width="64" height="64" rx="14" fill="#0f172a" />
+  <rect x="16" y="20" width="32" height="24" rx="12" fill="#1d4ed8" />
+  <g fill="#34d399">
+    <rect x="23" y="26" width="4" height="12" rx="2" />
+    <rect x="30" y="23" width="4" height="15" rx="2" />
+    <rect x="37" y="28" width="4" height="10" rx="2" />
+  </g>
+  <circle cx="45" cy="18" r="8" fill="#facc15" />
+  <path d="M45 14v8" stroke="#0f172a" stroke-width="2" stroke-linecap="round" />
+  <path d="M42 18h6" stroke="#0f172a" stroke-width="2" stroke-linecap="round" />
+</svg>
