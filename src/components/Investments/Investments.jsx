@@ -731,8 +731,12 @@ export const Investments = ({ transactions = [] }) => {
                 </thead>
                 <tbody>
                   {paginatedCredits.map(credit => {
-                    const profitEarned = Math.max(0, (credit.totalPaid || 0) - credit.principalAmount);
-                    
+                    const totalPaid = credit.totalPaid || 0;
+                    const principal = credit.principalAmount || 0;
+                    const projectedProfit = Math.max(0, credit.interestAmount ?? (credit.totalAmount - principal));
+                    const profitEarned = Math.max(0, totalPaid - principal);
+                    const profitPending = Math.max(0, projectedProfit - profitEarned);
+
                     return (
                     <tr key={credit.id}>
                       <td>{formatDateSV(credit.date)}</td>
@@ -755,8 +759,16 @@ export const Investments = ({ transactions = [] }) => {
                         <span className="payment-count">({credit.payments?.length || 0} pagos)</span>
                       </td>
                       <td className="amount-cell profit">
-                        ${profitEarned.toFixed(2)}
-                        {profitEarned > 0 && <span className="profit-indicator">💰</span>}
+                        <div className="profit-value">
+                          ${profitEarned > 0 ? profitEarned.toFixed(2) : projectedProfit.toFixed(2)}
+                          <span className={`profit-label ${profitEarned > 0 ? 'earned' : 'projected'}`}>
+                            {profitEarned > 0
+                              ? profitPending > 0
+                                ? `Cobrada (faltan $${profitPending.toFixed(2)})`
+                                : 'Interés cobrado al 100%'
+                              : 'Proyectada'}
+                          </span>
+                        </div>
                       </td>
                       <td className="amount-cell warning">${(credit.remainingBalance || credit.totalAmount).toFixed(2)}</td>
                       <td>
