@@ -13,12 +13,13 @@ import { Investments } from '../Investments/Investments';
 import { Accounts } from '../Accounts/Accounts';
 import './Dashboard.css';
 import { useInvestments } from '../../hooks/useInvestments';
+import { LoaderOverlay } from '../LoaderOverlay/LoaderOverlay.jsx';
 
 export const Dashboard = () => {
   const { user, logout } = useAuth();
   const { transactions, loading, addTransaction, updateTransaction, deleteTransaction, getBalance } = useTransactions();
   const { summarizeAccountBalances } = useAccounts();
-  const { purchases, credits } = useInvestments(user?.uid);
+  const { purchases, credits, loading: investmentsLoading } = useInvestments(user?.uid);
   const [showForm, setShowForm] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [showErrorBanner, setShowErrorBanner] = useState(false);
@@ -90,6 +91,7 @@ export const Dashboard = () => {
   };
 
   const balance = getBalance();
+  const isDataSyncing = loading || investmentsLoading;
   const ledgerSummary = useMemo(() => summarizeAccountBalances({
     transactions,
     purchases,
@@ -351,6 +353,7 @@ export const Dashboard = () => {
 
   return (
     <div className="app-layout">
+      <LoaderOverlay visible={isDataSyncing} message="Cargando movimientos y cuentas..." />
       {showErrorBanner && <ErrorBanner onDismiss={() => setShowErrorBanner(false)} />}
       
       {/* Navbar superior con toggler para Offcanvas */}
