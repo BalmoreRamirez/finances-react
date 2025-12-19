@@ -308,7 +308,9 @@
 .credits-table-container {
   background: white;
   border-radius: 12px;
-  overflow: hidden; /* default; overridden on small screens */
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
@@ -510,6 +512,7 @@
   display: flex;
   gap: 8px;
   justify-content: flex-end;
+  min-width: 120px;
 }
 
 .btn-icon {
