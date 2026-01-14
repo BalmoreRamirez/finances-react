@@ -73,8 +73,13 @@ export const Investments = ({ transactions = [] }) => {
     purchases,
     credits,
   }), [transactions, purchases, credits]);
-  const activosAccount = ledgerSnapshot.accounts.find((account) => account.id === 'activos-disponibles');
-  const liquidBalance = Math.max(0, activosAccount?.balance || 0);
+  const liquidBalance = useMemo(() => {
+    const liquidIds = ['activos-banco', 'activos-caja', 'activos-fondo-inversiones'];
+    const total = (ledgerSnapshot.accounts || [])
+      .filter((account) => liquidIds.includes(account.id))
+      .reduce((sum, account) => sum + (account.balance || 0), 0);
+    return Math.max(0, total);
+  }, [ledgerSnapshot.accounts]);
   const showAlert = (options) => Swal.fire({
     confirmButtonText: 'Aceptar',
     ...options,

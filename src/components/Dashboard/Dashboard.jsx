@@ -1,4 +1,16 @@
 import { useState, useEffect, useMemo } from 'react';
+import {
+  LineChart,
+  Line,
+  ResponsiveContainer,
+  Tooltip,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  BarChart,
+  Bar,
+} from 'recharts';
+import { formatDateSV, parseDateYMDToSVMidnightUTC, todayYMDInSV } from '../../utils/dateTZ';
 import { useAuth } from '../../context/AuthContext';
 import { useTransactions } from '../../hooks/useTransactions';
 import { useAccounts } from '../../hooks/useAccounts';
@@ -7,7 +19,6 @@ import { Header } from '../Header/Header';
 import { TransactionForm } from '../TransactionForm/TransactionForm';
 import { TransactionList } from '../TransactionList/TransactionList';
 import { ErrorBanner } from '../ErrorBanner/ErrorBanner';
-import { AnalyticsDashboard } from '../AnalyticsDashboard/AnalyticsDashboard';
 import { Settings } from '../Settings/Settings';
 import { Investments } from '../Investments/Investments';
 import { Accounts } from '../Accounts/Accounts';
@@ -24,7 +35,8 @@ export const Dashboard = () => {
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [showErrorBanner, setShowErrorBanner] = useState(false);
   const [firestoreError, setFirestoreError] = useState(false);
-  const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard', 'transactions', 'analytics', 'settings'
+  const [currentView, setCurrentView] = useState('dashboard');
+  const [analysisPeriod, setAnalysisPeriod] = useState('mes');
   // Sidebar manejado por Bootstrap Offcanvas
 
   useEffect(() => {
@@ -99,9 +111,12 @@ export const Dashboard = () => {
   }), [transactions, purchases, credits, summarizeAccountBalances]);
 
   const activeAccountBalance = useMemo(() => {
-    const activeAccount = ledgerSummary.accounts.find((account) => account.id === 'activos-disponibles');
-    return Math.max(0, activeAccount?.balance || 0);
-  }, [ledgerSummary]);
+    const liquidIds = ['activos-banco', 'activos-caja', 'activos-fondo-inversiones'];
+    const total = (ledgerSummary.accounts || [])
+      .filter((account) => liquidIds.includes(account.id))
+      .reduce((sum, account) => sum + (account.balance || 0), 0);
+    return Math.max(0, total);
+  }, [ledgerSummary.accounts]);
 
   const formatCurrency = (value) => new Intl.NumberFormat('es-ES', {
     style: 'currency',
@@ -152,14 +167,104 @@ export const Dashboard = () => {
   const savingsRateLabel = `${savingsRate > 0 ? '+' : ''}${savingsRate.toFixed(1)}%`;
   const savingsMessage = savingsRate >= 0 ? 'Mantienes un balance saludable' : 'Revisa tus gastos este mes';
 
+  const periodLabels = {
+    dia: 'Hoy',
+    semana: 'Últimos 7 días',
+    mes: 'Últimos 30 días',
+    'año': 'Últimos 12 meses'
+  };
+
+  const filteredPeriodTransactions = useMemo(() => {
+    const todayYMD = todayYMDInSV();
+    const startOfTodaySV = parseDateYMDToSVMidnightUTC(todayYMD);
+    const startDate = new Date(startOfTodaySV);
+
+    switch (analysisPeriod) {
+      case 'dia':
+        break;
+      case 'semana':
+        startDate.setUTCDate(startDate.getUTCDate() - 7);
+        break;
+      case 'mes':
+        startDate.setUTCMonth(startDate.getUTCMonth() - 1);
+        break;
+      case 'año':
+        startDate.setUTCFullYear(startDate.getUTCFullYear() - 1);
+        break;
+      default:
+        startDate.setUTCMonth(startDate.getUTCMonth() - 1);
+    }
+
+    return transactions.filter((t) => new Date(t.date) >= startDate);
+  }, [transactions, analysisPeriod]);
+
+  const periodTotals = useMemo(() => {
+    const income = filteredPeriodTransactions
+      .filter((t) => t.type === 'ingreso')
+      .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+
+    const expense = filteredPeriodTransactions
+      .filter((t) => t.type === 'egreso')
+      .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+
+    const balanceValue = income - expense;
+
+    return {
+      income,
+      expense,
+      balance: balanceValue,
+      savingsRate: income > 0 ? ((income - expense) / income) * 100 : 0,
+    };
+  }, [filteredPeriodTransactions]);
+
+  const periodTrendData = useMemo(() => {
+    const dailyData = {};
+
+    filteredPeriodTransactions.forEach((t) => {
+      const label = formatDateSV(t.date, { month: 'short', day: 'numeric' });
+
+      if (!dailyData[label]) {
+        dailyData[label] = { date: label, ingresos: 0, egresos: 0 };
+      }
+
+      if (t.type === 'ingreso') {
+        dailyData[label].ingresos += parseFloat(t.amount || 0);
+      } else {
+        dailyData[label].egresos += parseFloat(t.amount || 0);
+      }
+    });
+
+    return Object.values(dailyData).slice(-10);
+  }, [filteredPeriodTransactions]);
+
+  const periodBarData = useMemo(() => ([{
+    name: 'Período',
+    Ingresos: periodTotals.income,
+    Egresos: periodTotals.expense,
+  }]), [periodTotals]);
+
+  const categorySlices = useMemo(() => {
+    const totalsByCategory = {};
+
+    filteredPeriodTransactions.forEach((t) => {
+      if (t.type !== 'egreso') return;
+      totalsByCategory[t.category] = (totalsByCategory[t.category] || 0) + parseFloat(t.amount || 0);
+    });
+
+    return Object.entries(totalsByCategory)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 3);
+  }, [filteredPeriodTransactions]);
+
   const renderContent = () => {
     switch (currentView) {
       case 'dashboard':
         return (
           <>
             <Header 
-              title="Dashboard" 
-              subtitle="Resumen general de tus finanzas"
+              title="Dashboard unificado" 
+              subtitle="Resumen y análisis integrados en una sola vista"
             />
             <div className="dashboard-grid">
               <div className="dashboard-hero">
@@ -203,41 +308,102 @@ export const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="dashboard-secondary-grid">
-                <div className="stat-card">
-                  <div className="stat-icon purple" aria-hidden="true">�</div>
-                  <div className="stat-details">
-                    <span className="stat-label">Total transacciones</span>
-                    <span className="stat-value">{totalTransactions}</span>
-                    <span className="stat-helper">Este mes: {monthlyTransactionsCount}</span>
+              <section className="analysis-section" aria-label="Análisis financiero integrado">
+                <div className="analysis-header">
+                  <div>
+                    <p className="analysis-eyebrow">Análisis</p>
+                    <h3>Salud financiera</h3>
+                    <span className="analysis-helper">{periodLabels[analysisPeriod]}</span>
+                  </div>
+                  <div className="period-toggle" role="group" aria-label="Seleccionar período de análisis">
+                    {['dia', 'semana', 'mes', 'año'].map((period) => (
+                      <button
+                        key={period}
+                        type="button"
+                        className={analysisPeriod === period ? 'active' : ''}
+                        onClick={() => setAnalysisPeriod(period)}
+                      >
+                        {periodLabels[period]}
+                      </button>
+                    ))}
                   </div>
                 </div>
-                <div className="stat-card">
-                  <div className="stat-icon amber" aria-hidden="true">�</div>
-                  <div className="stat-details">
-                    <span className="stat-label">Ticket promedio</span>
-                    <span className="stat-value">{formatCurrency(averageTicket)}</span>
-                    <span className="stat-helper">Ingresos: {incomeTransactions} · Egresos: {expenseTransactions}</span>
-                  </div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-icon emerald" aria-hidden="true">🌱</div>
-                  <div className="stat-details">
-                    <span className="stat-label">Índice de ahorro</span>
-                    <span className="stat-value">{savingsRateLabel}</span>
-                    <span className="stat-helper">{savingsMessage}</span>
-                  </div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-icon rose" aria-hidden="true">📉</div>
-                  <div className="stat-details">
-                    <span className="stat-label">Mayor egreso</span>
-                    <span className="stat-value">{largestExpenseAmount}</span>
-                    <span className="stat-helper">{largestExpenseLabel}</span>
-                  </div>
-                </div>
-              </div>
 
+                <div className="analysis-grid">
+                  <div className="analysis-card income">
+                    <div className="analysis-card-label">Ingresos</div>
+                    <div className="analysis-card-value">{formatCurrency(periodTotals.income)}</div>
+                    <span className="analysis-card-helper">Entrada total en el período</span>
+                  </div>
+                  <div className="analysis-card expense">
+                    <div className="analysis-card-label">Egresos</div>
+                    <div className="analysis-card-value">{formatCurrency(periodTotals.expense)}</div>
+                    <span className="analysis-card-helper">Salidas registradas</span>
+                  </div>
+                  <div className={`analysis-card balance ${periodTotals.balance >= 0 ? 'positive' : 'negative'}`}>
+                    <div className="analysis-card-label">Balance del período</div>
+                    <div className="analysis-card-value">{formatCurrency(periodTotals.balance)}</div>
+                    <span className="analysis-card-helper">{periodTotals.balance >= 0 ? 'Resultado favorable' : 'Revisa gastos'}</span>
+                  </div>
+                  <div className="analysis-card savings">
+                    <div className="analysis-card-label">Tasa de ahorro</div>
+                    <div className="analysis-card-value">{periodTotals.savingsRate.toFixed(1)}%</div>
+                    <span className="analysis-card-helper">Ahorro sobre ingresos del período</span>
+                  </div>
+                </div>
+
+                <div className="analysis-visuals">
+                  <div className="chart-card">
+                    <div className="chart-card-heading">
+                      <h4>Tendencia del período</h4>
+                      <span>Ingresos vs egresos</span>
+                    </div>
+                    {periodTrendData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height={240}>
+                        <LineChart data={periodTrendData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="date" />
+                          <YAxis />
+                          <Tooltip formatter={(value) => formatCurrency(value)} />
+                          <Line type="monotone" dataKey="ingresos" stroke="#22c55e" strokeWidth={2} />
+                          <Line type="monotone" dataKey="egresos" stroke="#ef4444" strokeWidth={2} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="chart-empty">Aún no hay datos en este período.</div>
+                    )}
+                  </div>
+
+                  <div className="chart-card">
+                    <div className="chart-card-heading">
+                      <h4>Ingresos vs egresos</h4>
+                      <span>Distribución del período</span>
+                    </div>
+                    <ResponsiveContainer width="100%" height={240}>
+                      <BarChart data={periodBarData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip formatter={(value) => formatCurrency(value)} />
+                        <Bar dataKey="Ingresos" fill="#22c55e" radius={[8, 8, 0, 0]} />
+                        <Bar dataKey="Egresos" fill="#ef4444" radius={[8, 8, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                    <div className="category-chips">
+                      {categorySlices.length > 0 ? categorySlices.map((cat) => {
+                        const percentage = periodTotals.expense > 0
+                          ? (cat.value / periodTotals.expense) * 100
+                          : 0;
+                        return (
+                          <span key={cat.name} className="category-chip">
+                            <strong>{cat.name}</strong> · {percentage.toFixed(1)}%
+                          </span>
+                        );
+                      }) : <span className="category-chip muted">Sin gastos clasificados en el período</span>}
+                    </div>
+                  </div>
+                </div>
+              </section>
               <div className="recent-section">
                 <div className="section-heading">
                   <div>
@@ -296,17 +462,6 @@ export const Dashboard = () => {
               onDeleteTransaction={deleteTransaction}
               onEditTransaction={handleEditTransaction}
             />
-          </>
-        );
-
-      case 'analytics':
-        return (
-          <>
-            <Header 
-              title="Análisis Financiero" 
-              subtitle="Visualiza y analiza tus finanzas con gráficas detalladas"
-            />
-            <AnalyticsDashboard transactions={transactions} />
           </>
         );
 

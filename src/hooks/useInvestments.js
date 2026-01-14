@@ -20,6 +20,7 @@ export const useInvestments = (userId) => {
   const [credits, setCredits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [autoTxEnabled, setAutoTxEnabled] = useState(true);
   const incomeDefaults = TRANSACTION_ACCOUNT_DEFAULTS.ingreso;
   const PROFIT_ROUTE_VERSION = 'v2';
   const CAPITAL_ROUTE_VERSION = 'v1';
@@ -48,7 +49,7 @@ export const useInvestments = (userId) => {
     sourceType,
     sourceId,
     existingTransactionId = null,
-    fromAccountId = incomeDefaults.from,
+    fromAccountId = 'ingresos-ganancias-inversion',
     toAccountId = incomeDefaults.to,
   }) => {
     const profitValue = Number(amount) || 0;
@@ -100,8 +101,8 @@ export const useInvestments = (userId) => {
     sourceType,
     sourceId,
     existingTransactionId = null,
-    fromAccountId = 'inversion-capital',
-    toAccountId = 'activos-disponibles',
+    fromAccountId = 'activos-inversiones-productos',
+    toAccountId = 'activos-fondo-inversiones',
   }) => {
     const capitalValue = Number(amount) || 0;
     if (!userId || capitalValue <= 0) {
@@ -247,6 +248,7 @@ export const useInvestments = (userId) => {
     if (!userId || purchases.length === 0) return;
 
     const migratePurchases = async () => {
+      if (!autoTxEnabled) return;
       const pending = purchases.filter(
         (purchase) => purchase.profit > 0 && purchase.profitRouteVersion !== PROFIT_ROUTE_VERSION
       );
@@ -269,8 +271,8 @@ export const useInvestments = (userId) => {
             sourceType: 'purchase',
             sourceId: purchase.id,
             existingTransactionId,
-            fromAccountId: 'inversion-ganancias',
-            toAccountId: 'activos-disponibles',
+            fromAccountId: 'ingresos-ganancias-inversion',
+            toAccountId: 'activos-banco',
           });
 
           await updateDoc(doc(db, 'purchases', purchase.id), {
@@ -278,18 +280,23 @@ export const useInvestments = (userId) => {
             profitRouteVersion: PROFIT_ROUTE_VERSION,
           });
         } catch (migrationError) {
-          console.error('Error migrating purchase profit transaction:', migrationError);
+          if (migrationError.code === 'permission-denied') {
+            setAutoTxEnabled(false);
+            break;
+          }
+          console.warn('Error migrating purchase profit transaction:', migrationError);
         }
       }
     };
 
     migratePurchases();
-  }, [purchases, userId]);
+  }, [purchases, userId, autoTxEnabled]);
 
   useEffect(() => {
     if (!userId || purchases.length === 0) return;
 
     const migrateCapitalReturns = async () => {
+      if (!autoTxEnabled) return;
       const pending = purchases.filter(
         (purchase) => (purchase.investment || 0) > 0 && purchase.capitalRouteVersion !== CAPITAL_ROUTE_VERSION
       );
@@ -329,18 +336,23 @@ export const useInvestments = (userId) => {
             });
           }
         } catch (migrationError) {
-          console.error('Error migrating purchase capital return transaction:', migrationError);
+          if (migrationError.code === 'permission-denied') {
+            setAutoTxEnabled(false);
+            break;
+          }
+          console.warn('Error migrating purchase capital return transaction:', migrationError);
         }
       }
     };
 
     migrateCapitalReturns();
-  }, [purchases, userId]);
+  }, [purchases, userId, autoTxEnabled]);
 
   useEffect(() => {
     if (!userId || credits.length === 0) return;
 
     const migrateCredits = async () => {
+      if (!autoTxEnabled) return;
       const pending = credits.filter(
         (credit) => credit.interestAmount > 0 && credit.interestRouteVersion !== PROFIT_ROUTE_VERSION
       );
@@ -363,8 +375,8 @@ export const useInvestments = (userId) => {
             sourceType: 'credit',
             sourceId: credit.id,
             existingTransactionId,
-            fromAccountId: 'inversion-ganancias',
-            toAccountId: 'activos-disponibles',
+			fromAccountId: 'ingresos-intereses',
+            toAccountId: 'activos-banco',
           });
 
           await updateDoc(doc(db, 'credits', credit.id), {
@@ -372,13 +384,17 @@ export const useInvestments = (userId) => {
             interestRouteVersion: PROFIT_ROUTE_VERSION,
           });
         } catch (migrationError) {
-          console.error('Error migrating credit profit transaction:', migrationError);
+          if (migrationError.code === 'permission-denied') {
+            setAutoTxEnabled(false);
+            break;
+          }
+          console.warn('Error migrating credit profit transaction:', migrationError);
         }
       }
     };
 
     migrateCredits();
-  }, [credits, userId]);
+  }, [credits, userId, autoTxEnabled]);
 
   // Agregar compra
   const addPurchase = async (purchaseData) => {
@@ -405,8 +421,8 @@ export const useInvestments = (userId) => {
           description: `Ganancia por compra: ${purchaseData.productName}`,
           sourceType: 'purchase',
           sourceId: purchaseRef.id,
-          fromAccountId: 'inversion-ganancias',
-          toAccountId: 'activos-disponibles',
+          fromAccountId: 'ingresos-ganancias-inversion',
+          toAccountId: 'activos-banco',
         });
 
         if (profitTransactionId) {
@@ -462,8 +478,8 @@ export const useInvestments = (userId) => {
           sourceType: 'purchase',
           sourceId: purchaseId,
           existingTransactionId: profitTransactionId,
-          fromAccountId: 'inversion-ganancias',
-          toAccountId: 'activos-disponibles',
+          fromAccountId: 'ingresos-ganancias-inversion',
+          toAccountId: 'activos-banco',
         });
       } else if (profitTransactionId) {
         await deleteProfitTransaction(profitTransactionId);
@@ -565,8 +581,8 @@ export const useInvestments = (userId) => {
           sourceType: 'credit',
           sourceId: creditId,
           existingTransactionId: interestTransactionId,
-          fromAccountId: 'inversion-ganancias',
-          toAccountId: 'activos-disponibles',
+          fromAccountId: 'ingresos-intereses',
+          toAccountId: 'activos-banco',
         });
       } else if (interestTransactionId && !creditIsCompleted) {
         await deleteProfitTransaction(interestTransactionId);
@@ -619,8 +635,8 @@ export const useInvestments = (userId) => {
           sourceType: 'credit',
           sourceId: creditId,
           existingTransactionId: interestTransactionId,
-          fromAccountId: 'inversion-ganancias',
-          toAccountId: 'activos-disponibles',
+          fromAccountId: 'ingresos-intereses',
+          toAccountId: 'activos-banco',
         });
       } else if (interestTransactionId && status !== 'completed') {
         await deleteProfitTransaction(interestTransactionId);
@@ -665,8 +681,8 @@ export const useInvestments = (userId) => {
           sourceType: 'credit',
           sourceId: creditId,
           existingTransactionId: interestTransactionId,
-          fromAccountId: 'inversion-ganancias',
-          toAccountId: 'activos-disponibles',
+          fromAccountId: 'ingresos-intereses',
+          toAccountId: 'activos-banco',
         });
       } else if (interestTransactionId && status !== 'completed') {
         await deleteProfitTransaction(interestTransactionId);

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import './Accounts.css';
 import { useAccounts } from '../../hooks/useAccounts';
 import { useInvestments } from '../../hooks/useInvestments';
@@ -13,80 +13,243 @@ export const Accounts = ({ transactions = [], transactionsLoading }) => {
 	const { summarizeAccountBalances } = useAccounts();
 	const { user } = useAuth();
 	const { purchases, credits, loading: investmentsLoading } = useInvestments(user?.uid);
+	const [selectedAccount, setSelectedAccount] = useState(null);
 
-		const summary = useMemo(() => summarizeAccountBalances({
+	const summary = useMemo(() => summarizeAccountBalances({
 			transactions,
 			purchases,
 			credits,
-		}), [transactions, purchases, credits, summarizeAccountBalances]);
+	}), [transactions, purchases, credits, summarizeAccountBalances]);
 
-		const accountsWithDerivedValues = useMemo(() => {
-			return summary.accounts.map(account => {
-				if (account.id === 'inversion-ganancias') {
-					return {
-						...account,
-						balance: summary.investmentProfitTotal,
-						inflows: summary.investmentProfitTotal,
-						outflows: 0,
-					};
-				}
-				return account;
+	const accountsOverlay = useMemo(() => summary.accounts, [summary.accounts]);
+
+	const visibleAccounts = useMemo(
+		() => accountsOverlay.filter((account) => !account.hidden),
+		[accountsOverlay]
+	);
+
+	const accountHistory = useMemo(() => {
+		if (!selectedAccount) return [];
+
+		const base = transactions
+			.filter((t) => t.fromAccountId === selectedAccount.id || t.toAccountId === selectedAccount.id)
+			.map((t) => {
+				const isInflow = t.toAccountId === selectedAccount.id;
+				return {
+					id: t.id,
+					date: new Date(t.date),
+					description: t.description,
+					amount: Number(t.amount) || 0,
+					type: t.type,
+					direction: isInflow ? 'inflow' : 'outflow',
+				};
 			});
-		}, [summary.accounts, summary.investmentProfitTotal]);
 
-	const loading = transactionsLoading || investmentsLoading;
+		const synthetic = [];
+		if (selectedAccount.id === 'activos-fondo-inversiones') {
+			purchases.forEach((p) => {
+				const capital = Number(p.investment) || 0;
+				if (capital > 0) {
+					synthetic.push({
+						id: `purchase-${p.id}`,
+						date: p.date instanceof Date ? p.date : new Date(p.date),
+						description: `Capital invertido: ${p.productName || p.description || 'Compra'}`,
+						amount: capital,
+						type: 'inversion',
+						direction: 'outflow',
+					});
+				}
+			});
 
-	if (loading) {
-		return (
-			<div className="accounts-loading">
-				<div className="spinner" aria-hidden="true" />
-				<p>Calculando flujo contable...</p>
-			</div>
-		);
-	}
+			credits.forEach((c) => {
+				const principal = Number(c.principalAmount ?? c.totalAmount) || 0;
+				if (principal > 0) {
+					synthetic.push({
+						id: `credit-${c.id}`,
+						date: c.date instanceof Date ? c.date : new Date(c.date),
+						description: `Préstamo otorgado: ${c.clientName || 'Crédito'}`,
+						amount: principal,
+						type: 'credito',
+						direction: 'outflow',
+					});
+				}
 
-		const totalIngresos = summary.accounts
-			.filter(account => account.categoryKey === 'ingresos')
-			.reduce((sum, account) => sum + account.outflows, 0);
+				const returned = Math.min(Number(c.totalPaid) || 0, principal);
+				if (returned > 0) {
+					synthetic.push({
+						id: `credit-return-${c.id}`,
+						date: c.date instanceof Date ? c.date : new Date(c.date),
+						description: `Capital recuperado: ${c.clientName || 'Crédito'}`,
+						amount: returned,
+						type: 'credito',
+						direction: 'inflow',
+					});
+				}
+			});
+		}
 
-		const totalGastos = summary.accounts
-			.filter(account => account.categoryKey === 'gastos')
-			.reduce((sum, account) => sum + account.inflows, 0);
+		return [...base, ...synthetic].sort((a, b) => b.date - a.date);
+	}, [transactions, selectedAccount, purchases, credits]);
+
+	const totalIngresos = accountsOverlay
+		.filter((account) => account.categoryKey === 'ingresos')
+		.reduce((sum, account) => sum + account.outflows, 0);
+
+	const totalGastos = accountsOverlay
+		.filter((account) => account.categoryKey === 'gastos')
+		.reduce((sum, account) => sum + account.inflows, 0);
+
+	const categoryOrder = ['activos', 'pasivos', 'ingresos', 'gastos'];
+	const categoryLabels = {
+		activos: 'Activos',
+		pasivos: 'Pasivos',
+		ingresos: 'Ingresos',
+		gastos: 'Gastos',
+		otros: 'Otros'
+	};
+
+	const categoryTotals = useMemo(() => {
+		const map = {};
+		accountsOverlay.forEach((account) => {
+			const key = account.categoryKey || 'otros';
+			if (!map[key]) {
+				map[key] = {
+					key,
+					label: categoryLabels[key] || categoryLabels.otros,
+					inflows: 0,
+					outflows: 0,
+					balance: 0,
+					tone: account.tone,
+					count: 0,
+				};
+			}
+			map[key].inflows += account.inflows;
+			map[key].outflows += account.outflows;
+			map[key].balance += account.balance;
+			if (!account.hidden) {
+				map[key].count += 1;
+			}
+		});
+
+		return Object.values(map).sort((a, b) => {
+			const aIdx = categoryOrder.indexOf(a.key);
+			const bIdx = categoryOrder.indexOf(b.key);
+			if (aIdx === -1 && bIdx === -1) return a.label.localeCompare(b.label);
+			if (aIdx === -1) return 1;
+			if (bIdx === -1) return -1;
+			return aIdx - bIdx;
+		});
+	}, [accountsOverlay]);
+
+	const assetsTotal = categoryTotals.find((c) => c.key === 'activos')?.balance || 0;
+	const liabilitiesTotal = categoryTotals.find((c) => c.key === 'pasivos')?.balance || 0;
+	const netAssets = assetsTotal - Math.abs(liabilitiesTotal);
+	const equationGap = assetsTotal - Math.abs(liabilitiesTotal);
+	const netFlow = summary.totals.debits - summary.totals.credits;
+
+	const flowHealth = equationGap >= 0
+		? 'Activos cubren pasivos'
+		: 'Pasivos superan los activos';
+	const ingresosVsGastos = totalIngresos - totalGastos;
+
+		const loading = transactionsLoading || investmentsLoading;
+
+		if (loading) {
+			return (
+				<div className="accounts-loading">
+					<div className="spinner" aria-hidden="true" />
+					<p>Calculando flujo contable...</p>
+				</div>
+			);
+		}
 
 	return (
 		<div className="accounts-view">
 			<section className="accounts-hero">
 				<div>
 					<p className="eyebrow">Plan de cuentas</p>
-					<h3>Flujo entre activos, pasivos, patrimonio, ingresos y gastos</h3>
+					<h3>Flujo entre activos, pasivos, ingresos y gastos</h3>
 					<p className="subtitle">
-						Cada transacción o inversión ahora se valida contra el plan de cuentas.
-						Revisa cómo se mueve el dinero al entrar, invertirse y salir del sistema.
+						Cada movimiento usa el plan simplificado: caja, banco, fondo de inversiones; préstamos y TDC; ingresos y gastos clave.
 					</p>
 				</div>
 				<div className="accounts-hero-metrics">
 					<div className="metric">
-						<span>Entradas netas</span>
-								<strong>{formatCurrency(summary.totals.debits)}</strong>
+						<span>Posición neta</span>
+						<strong>{formatCurrency(netAssets)}</strong>
+						<small>Activos - pasivos</small>
 					</div>
 					<div className="metric">
-						<span>Salidas netas</span>
-								<strong>{formatCurrency(summary.totals.credits)}</strong>
+						<span>Flujo neto</span>
+						<strong>{formatCurrency(netFlow)}</strong>
+						<small>Entradas - salidas</small>
 					</div>
 					<div className="metric">
-						<span>Ingresos registrados</span>
-						<strong>{formatCurrency(totalIngresos)}</strong>
+						<span>Salud contable</span>
+						<strong>{flowHealth}</strong>
+						<small>Diferencia: {formatCurrency(equationGap)}</small>
 					</div>
 					<div className="metric">
-						<span>Gastos registrados</span>
-						<strong>{formatCurrency(totalGastos)}</strong>
+						<span>Ingresos vs gastos</span>
+						<strong>{formatCurrency(ingresosVsGastos)}</strong>
+						<small>Ingresos {formatCurrency(totalIngresos)} · Gastos {formatCurrency(totalGastos)}</small>
 					</div>
 				</div>
 			</section>
 
-					<section className="accounts-grid">
-						{accountsWithDerivedValues.map((account) => (
-					<article key={account.id} className="account-card" aria-label={`Cuenta ${account.label}`}>
+		<section className="accounts-flow">
+			<header className="section-heading">
+				<div>
+					<p className="eyebrow">Resumen por grupo</p>
+					<h4>Cómo circula el dinero</h4>
+				</div>
+				<p className="section-helper">Entradas, salidas y saldos por categoría contable</p>
+			</header>
+			<div className="flow-grid">
+				{categoryTotals.map((cat) => {
+					const totalFlow = cat.inflows + cat.outflows;
+					const inflowRatio = totalFlow > 0 ? (cat.inflows / totalFlow) * 100 : 0;
+					return (
+						<article key={cat.key} className="flow-card">
+							<div className="flow-card-head">
+								<div className="flow-dot" style={{ background: cat.tone || '#6366f1' }} aria-hidden="true" />
+								<div>
+									<p className="flow-eyebrow">{cat.label}</p>
+									<strong className="flow-balance">{formatCurrency(cat.balance)}</strong>
+									<span className="flow-sub">{cat.count} cuentas</span>
+								</div>
+							</div>
+							<div className="flow-row">
+								<span>Entradas</span>
+								<strong>{formatCurrency(cat.inflows)}</strong>
+							</div>
+							<div className="flow-row">
+								<span>Salidas</span>
+								<strong>{formatCurrency(cat.outflows)}</strong>
+							</div>
+							<div className="flow-bar">
+								<div className="flow-bar-fill" style={{ width: `${inflowRatio}%`, background: cat.tone || '#22c55e' }} />
+							</div>
+						</article>
+					);
+				})}
+			</div>
+		</section>
+
+		<section className="accounts-grid">
+			{visibleAccounts.map((account) => {
+				const totalFlow = account.inflows + account.outflows;
+				const inflowRatio = totalFlow > 0 ? (account.inflows / totalFlow) * 100 : 0;
+				return (
+					<article
+						key={account.id}
+						className="account-card"
+						aria-label={`Cuenta ${account.label}`}
+						onClick={() => setSelectedAccount(account)}
+						role="button"
+						tabIndex={0}
+						onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setSelectedAccount(account); } }}
+					>
 						<div className="account-card-head">
 							<div className="account-icon" aria-hidden="true" style={{ background: account.tone + '20', color: account.tone }}>
 								{account.icon}
@@ -109,9 +272,14 @@ export const Accounts = ({ transactions = [], transactionsLoading }) => {
 								<strong>{formatCurrency(account.outflows)}</strong>
 							</div>
 						</div>
+						<div className="account-bar">
+							<div className="account-bar-fill" style={{ width: `${inflowRatio}%`, background: account.tone || '#22c55e' }} />
+							<span className="account-bar-label">{inflowRatio.toFixed(0)}% entradas</span>
+						</div>
 					</article>
-				))}
-			</section>
+				);
+			})}
+		</section>
 
 			{summary.warnings.length > 0 && (
 				<section className="accounts-warnings">
@@ -123,6 +291,35 @@ export const Accounts = ({ transactions = [], transactionsLoading }) => {
 						))}
 					</ul>
 				</section>
+			)}
+
+			{selectedAccount && (
+				<div className="account-detail-overlay" role="dialog" aria-modal="true">
+					<div className="account-detail">
+						<header className="detail-head">
+							<div>
+								<p className="eyebrow">Historial</p>
+								<h4>{selectedAccount.label}</h4>
+								<small>{selectedAccount.description}</small>
+							</div>
+							<button className="detail-close" onClick={() => setSelectedAccount(null)}>Cerrar</button>
+						</header>
+						<div className="detail-list">
+							{accountHistory.length === 0 && <p className="detail-empty">Sin movimientos para esta cuenta.</p>}
+							{accountHistory.map((item) => (
+								<div key={item.id} className="detail-row">
+									<div>
+										<p className="detail-date">{item.date.toLocaleDateString('es-ES')}</p>
+										<p className="detail-desc">{item.description}</p>
+									</div>
+									<div className={`detail-amount ${item.direction === 'inflow' ? 'in' : 'out'}`}>
+										{item.direction === 'inflow' ? '+' : '-'}{formatCurrency(item.amount)}
+									</div>
+								</div>
+							))}
+						</div>
+					</div>
+				</div>
 			)}
 		</div>
 	);

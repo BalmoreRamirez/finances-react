@@ -227,16 +227,7 @@ export const AnalyticsDashboard = ({ transactions }) => {
 
   const normalizedAccounts = useMemo(() => {
     if (!accountsSummary?.accounts) return [];
-    return accountsSummary.accounts.map(account =>
-      account.id === 'inversion-ganancias'
-        ? {
-            ...account,
-            balance: accountsSummary.investmentProfitTotal,
-            inflows: accountsSummary.investmentProfitTotal,
-            outflows: 0,
-          }
-        : account
-    );
+    return accountsSummary.accounts.filter((account) => !account.hidden);
   }, [accountsSummary]);
 
   const accountHighlights = useMemo(() => {

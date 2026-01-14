@@ -10,19 +10,21 @@ import {
 
 export const useAccounts = () => {
 	const accounts = useMemo(() => BASE_ACCOUNTS, []);
+	const visibleAccounts = useMemo(() => BASE_ACCOUNTS.filter((a) => !a.hidden), []);
 
 	const accountsByCategory = useMemo(() => {
-		return accounts.reduce((acc, account) => {
+		return visibleAccounts.reduce((acc, account) => {
 			if (!acc[account.categoryKey]) {
 				acc[account.categoryKey] = [];
 			}
 			acc[account.categoryKey].push(account);
 			return acc;
 		}, {});
-	}, [accounts]);
+	}, [visibleAccounts]);
 
 	return {
 		accounts,
+		visibleAccounts,
 		accountsByCategory,
 		flowRules: ACCOUNT_FLOW_RULES,
 		getAccountById,

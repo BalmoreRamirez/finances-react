@@ -14,6 +14,23 @@ import { useAuth } from '../context/AuthContext';
 import { parseDateYMDToSVMidnightUTC } from '../utils/dateTZ';
 import { getAccountById, TRANSACTION_ACCOUNT_DEFAULTS } from '../services/accounts';
 
+const ACCOUNT_MIGRATION_VERSION = 'v2-compact-accounts';
+
+const remapAccountId = (accountId) => {
+  const map = {
+    'activos-disponibles': 'activos-banco',
+    'activos-billetera': 'activos-banco',
+    'activos-cuentas-por-cobrar': 'activos-prestamos-otorgados',
+    'inversion-ganancias': 'ingresos-ganancias-inversion',
+    'inversion-capital': 'activos-fondo-inversiones',
+    'pasivos-cuentas-por-pagar': 'pasivos-prestamos-recibidos',
+    'patrimonio-capital': 'activos-banco',
+    'ingresos-otros': 'ingresos-ordinarios',
+    'gastos-perdidas-inversion': 'gastos-operativos',
+  };
+  return map[accountId] || accountId;
+};
+
 const buildAccountMetadata = (transaction) => {
   const defaults = TRANSACTION_ACCOUNT_DEFAULTS[transaction.type] || {};
   const fromAccountId = transaction.fromAccountId || defaults.from || null;
@@ -82,6 +99,41 @@ export const useTransactions = () => {
 
     return () => unsubscribe();
   }, [user]);
+
+  useEffect(() => {
+    if (!user || transactions.length === 0) return;
+
+    const migrateAccounts = async () => {
+      const candidates = transactions.filter((tx) => tx.migrationAccountVersion !== ACCOUNT_MIGRATION_VERSION);
+      if (candidates.length === 0) return;
+
+      for (const tx of candidates) {
+        let newFrom = remapAccountId(tx.fromAccountId);
+        const newTo = remapAccountId(tx.toAccountId);
+
+        if (tx.autoSourceType === 'credit') {
+          newFrom = 'ingresos-intereses';
+        }
+        const needsUpdate = newFrom !== tx.fromAccountId || newTo !== tx.toAccountId || !tx.migrationAccountVersion;
+        if (!needsUpdate) continue;
+
+        try {
+          await updateDoc(doc(db, 'transactions', tx.id), {
+            fromAccountId: newFrom,
+            toAccountId: newTo,
+            migrationAccountVersion: ACCOUNT_MIGRATION_VERSION,
+          });
+        } catch (migrationError) {
+          console.error('Error migrando cuentas de transacción:', tx.id, migrationError);
+          if (migrationError.code === 'permission-denied') {
+            break;
+          }
+        }
+      }
+    };
+
+    migrateAccounts();
+  }, [transactions, user]);
 
   const addTransaction = async (transaction) => {
     try {

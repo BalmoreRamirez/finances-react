@@ -1,108 +1,188 @@
 export const BASE_ACCOUNTS = [
 	{
-		id: 'activos-disponibles',
-		label: 'Activos',
-		shortLabel: 'Activos',
-		description: 'Lo que tenés: efectivo, bancos o saldos disponibles.',
+		id: 'activos-caja',
+		label: 'Caja',
+		shortLabel: 'Caja',
+		description: 'Efectivo disponible.',
 		categoryKey: 'activos',
 		nature: 'debit',
 		tone: '#0ea5e9',
+		icon: '💵',
+	},
+	{
+		id: 'activos-banco',
+		label: 'Banco',
+		shortLabel: 'Banco',
+		description: 'Saldos en cuentas bancarias.',
+		categoryKey: 'activos',
+		nature: 'debit',
+		tone: '#0284c7',
+		icon: '🏦',
+	},
+	{
+		id: 'activos-fondo-inversiones',
+		label: 'Fondo de inversiones',
+		shortLabel: 'Fondo inversiones',
+		description: 'Cuenta interna para fondear y recuperar inversiones.',
+		categoryKey: 'activos',
+		nature: 'debit',
+		tone: '#0f766e',
 		icon: '💼',
 	},
 	{
-		id: 'pasivos-obligaciones',
-		label: 'Pasivos',
-		shortLabel: 'Pasivos',
-		description: 'Lo que debés: créditos, obligaciones y compromisos.',
+		id: 'activos-inversiones-productos',
+		label: 'Inversiones en productos',
+		shortLabel: 'Inv. productos',
+		description: 'Inventario o productos comprados para revender.',
+		categoryKey: 'activos',
+		nature: 'debit',
+		tone: '#14b8a6',
+		icon: '📦',
+		hidden: true,
+	},
+	{
+		id: 'activos-prestamos-otorgados',
+		label: 'Préstamos otorgados',
+		shortLabel: 'Préstamos otorgados',
+		description: 'Dinero prestado a terceros (capital pendiente).',
+		categoryKey: 'activos',
+		nature: 'debit',
+		tone: '#22c55e',
+		icon: '🤝',
+		hidden: true,
+	},
+	{
+		id: 'pasivos-prestamos-recibidos',
+		label: 'Préstamos recibidos',
+		shortLabel: 'Préstamos recibidos',
+		description: 'Obligaciones por dinero recibido de terceros.',
 		categoryKey: 'pasivos',
 		nature: 'credit',
 		tone: '#f97316',
-		icon: '📉',
+		icon: '🧾',
 	},
 	{
-		id: 'patrimonio-capital',
-		label: 'Patrimonio',
-		shortLabel: 'Patrimonio',
-		description: 'Tu capital o aportes propios dentro del sistema.',
-		categoryKey: 'patrimonio',
+		id: 'pasivos-tarjetas-credito',
+		label: 'Tarjetas de crédito',
+		shortLabel: 'TDC',
+		description: 'Saldo pendiente en tarjetas de crédito.',
+		categoryKey: 'pasivos',
 		nature: 'credit',
-		tone: '#6366f1',
-		icon: '🏛️',
+		tone: '#f59e0b',
+		icon: '💳',
 	},
 	{
-		id: 'ingresos-operativos',
-		label: 'Ingresos',
-		shortLabel: 'Ingresos',
-		description: 'Lo que ganás por ventas, servicios u otras fuentes.',
+		id: 'ingresos-ordinarios',
+		label: 'Ingresos ordinarios',
+		shortLabel: 'Ingresos ord.',
+		description: 'Ventas y servicios habituales.',
 		categoryKey: 'ingresos',
 		nature: 'credit',
 		tone: '#10b981',
 		icon: '📈',
 	},
 	{
+		id: 'ingresos-ganancias-inversion',
+		label: 'Ganancia por inversiones',
+		shortLabel: 'Gcia. inversiones',
+		description: 'Ganancias realizadas de inversiones.',
+		categoryKey: 'ingresos',
+		nature: 'credit',
+		tone: '#c026d3',
+		icon: '💰',
+	},
+	{
+		id: 'ingresos-intereses',
+		label: 'Intereses ganados',
+		shortLabel: 'Intereses',
+		description: 'Intereses cobrados por préstamos u otros rendimientos.',
+		categoryKey: 'ingresos',
+		nature: 'credit',
+		tone: '#22c55e',
+		icon: '🪙',
+	},
+	{
+		id: 'gastos-alimentacion',
+		label: 'Alimentación',
+		shortLabel: 'Alimentación',
+		description: 'Compras de comida y restaurantes.',
+		categoryKey: 'gastos',
+		nature: 'debit',
+		tone: '#ef4444',
+		icon: '🍽️',
+	},
+	{
+		id: 'gastos-transporte',
+		label: 'Transporte',
+		shortLabel: 'Transporte',
+		description: 'Gastos de movilidad.',
+		categoryKey: 'gastos',
+		nature: 'debit',
+		tone: '#f97316',
+		icon: '🚌',
+	},
+	{
+		id: 'gastos-servicios',
+		label: 'Servicios',
+		shortLabel: 'Servicios',
+		description: 'Servicios públicos o suscripciones.',
+		categoryKey: 'gastos',
+		nature: 'debit',
+		tone: '#fb7185',
+		icon: '💡',
+	},
+	{
+		id: 'gastos-compras-personales',
+		label: 'Compras personales',
+		shortLabel: 'Compras pers.',
+		description: 'Compras no operativas.',
+		categoryKey: 'gastos',
+		nature: 'debit',
+		tone: '#f43f5e',
+		icon: '🛍️',
+	},
+	{
 		id: 'gastos-operativos',
-		label: 'Gastos',
-		shortLabel: 'Gastos',
-		description: 'Lo que gastás en operaciones, servicios o compras.',
+		label: 'Gastos operativos',
+		shortLabel: 'Gastos oper.',
+		description: 'Costos y gastos del negocio.',
 		categoryKey: 'gastos',
 		nature: 'debit',
 		tone: '#ef4444',
 		icon: '🧾',
 	},
-	{
-		id: 'inversion-capital',
-		label: 'Inversiones · Capital',
-		shortLabel: 'Inv. capital',
-		description: 'Capital invertido activo en compras o proyectos.',
-		categoryKey: 'activos',
-		parent: 'activos-disponibles',
-		nature: 'debit',
-		tone: '#0f766e',
-		icon: '💎',
-	},
-	{
-		id: 'inversion-ganancias',
-		label: 'Inversiones · Ganancias',
-		shortLabel: 'Inv. ganancia',
-		description: 'Ganancia obtenida de las inversiones realizadas.',
-		categoryKey: 'ingresos',
-		parent: 'ingresos-operativos',
-		nature: 'credit',
-		tone: '#c026d3',
-		icon: '💰',
-	},
 ];
 
 export const ACCOUNT_FLOW_RULES = {
 	ingreso: {
-		from: ['ingresos-operativos'],
-		to: ['activos-disponibles', 'patrimonio-capital'],
-		message: 'Los ingresos deben ir de Ingresos hacia Activos o Patrimonio.',
+		from: ['ingresos-ordinarios', 'ingresos-ganancias-inversion', 'ingresos-intereses'],
+		to: ['activos-banco', 'activos-caja', 'activos-fondo-inversiones'],
+		message: 'Los ingresos salen de Ingresos y aterrizan en Caja/Banco/Fondo.',
 	},
 	egreso: {
-		from: ['activos-disponibles', 'patrimonio-capital'],
-		to: ['gastos-operativos', 'pasivos-obligaciones'],
-		message: 'Los egresos salen de Activos/Patrimonio hacia Gastos o Pasivos.',
+		from: ['activos-banco', 'activos-caja', 'activos-fondo-inversiones'],
+		to: ['gastos-alimentacion', 'gastos-transporte', 'gastos-servicios', 'gastos-compras-personales', 'gastos-operativos', 'pasivos-prestamos-recibidos', 'pasivos-tarjetas-credito'],
+		message: 'Los egresos salen de Activos y van a Gastos o Pasivos.',
 	},
 	investmentCapital: {
-		from: ['activos-disponibles'],
-		to: ['inversion-capital'],
-		message: 'El capital invertido debe salir de Activos hacia Inversiones · Capital.',
+		from: ['activos-fondo-inversiones'],
+		to: ['activos-inversiones-productos', 'activos-prestamos-otorgados'],
+		message: 'El capital sale del Fondo de inversiones hacia el activo de la inversión.',
 	},
 	investmentProfit: {
-		from: ['inversion-capital'],
-		to: ['inversion-ganancias', 'ingresos-operativos'],
-		message: 'La ganancia de inversión debe salir de Inv. Capital hacia Ganancias.',
+		from: ['ingresos-ganancias-inversion', 'ingresos-intereses'],
+		to: ['activos-banco', 'activos-caja', 'activos-fondo-inversiones'],
+		message: 'La ganancia siempre es Ingreso y termina en un activo líquido.',
 	},
 };
 
 export const TRANSACTION_ACCOUNT_DEFAULTS = {
 	ingreso: {
-		from: 'ingresos-operativos',
-		to: 'activos-disponibles',
+		from: 'ingresos-ordinarios',
+		to: 'activos-banco',
 	},
 	egreso: {
-		from: 'activos-disponibles',
+		from: 'activos-banco',
 		to: 'gastos-operativos',
 	},
 };
@@ -122,10 +202,12 @@ export const getAccountById = (accountId) => accountLookup[accountId];
 export const getAllowedAccounts = (movementType, direction = 'from') => {
 	const rule = ACCOUNT_FLOW_RULES[movementType];
 	if (!rule || !rule[direction]) {
-		return BASE_ACCOUNTS;
+		return BASE_ACCOUNTS.filter((account) => !account.hidden);
 	}
 
-	return BASE_ACCOUNTS.filter((account) => targetMatchesAccount(account, rule[direction]));
+	return BASE_ACCOUNTS
+		.filter((account) => !account.hidden)
+		.filter((account) => targetMatchesAccount(account, rule[direction]));
 };
 
 export const validateAccountFlow = ({
@@ -190,6 +272,7 @@ const createLedgerAccount = (account) => ({
 	nature: account.nature || 'debit',
 	tone: account.tone,
 	icon: account.icon,
+	hidden: Boolean(account.hidden),
 	balance: 0,
 	inflows: 0,
 	outflows: 0,
@@ -296,25 +379,29 @@ export const summarizeAccountBalances = ({
 		const capital = Number(purchase.investment) || 0;
 		const salePrice = Number(purchase.salePrice) || 0;
 		if (capital > 0) {
-			applyMovement(ledger, 'activos-disponibles', 'inversion-capital', capital);
+			applyMovement(ledger, 'activos-fondo-inversiones', 'activos-inversiones-productos', capital);
 		}
 
 		const profit = salePrice - capital;
-		if (profit > 0) {
+		const profitIsRecognized = Boolean(
+			purchase.profitTransactionId ||
+			purchase.profitRouteVersion
+		);
+		if (profit > 0 && profitIsRecognized) {
 			investmentProfitTotal += profit;
 		}
 	});
 
 	credits.forEach((credit) => {
-		const principal = Number(credit.principalAmount) || 0;
+		const principal = Number(credit.principalAmount ?? credit.totalAmount) || 0;
 		if (principal > 0) {
-			applyMovement(ledger, 'activos-disponibles', 'pasivos-obligaciones', principal);
+			applyMovement(ledger, 'activos-fondo-inversiones', 'activos-prestamos-otorgados', principal);
 		}
 
 		const totalPaid = Number(credit.totalPaid) || 0;
 		const principalRepaid = Math.min(totalPaid, principal);
 		if (principalRepaid > 0) {
-			applyMovement(ledger, 'pasivos-obligaciones', 'activos-disponibles', principalRepaid);
+			applyMovement(ledger, 'activos-prestamos-otorgados', 'activos-fondo-inversiones', principalRepaid);
 		}
 
 		const interestAmount = Number(credit.interestAmount) || 0;
