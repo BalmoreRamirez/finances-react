@@ -14,6 +14,7 @@ export const Accounts = ({ transactions = [], transactionsLoading }) => {
 	const { user } = useAuth();
 	const { purchases, credits, loading: investmentsLoading } = useInvestments(user?.uid);
 	const [selectedAccount, setSelectedAccount] = useState(null);
+	const [selectedCategory, setSelectedCategory] = useState(null);
 
 	const summary = useMemo(() => summarizeAccountBalances({
 			transactions,
@@ -271,7 +272,14 @@ export const Accounts = ({ transactions = [], transactionsLoading }) => {
 					const totalFlow = cat.inflows + cat.outflows;
 					const inflowRatio = totalFlow > 0 ? (cat.inflows / totalFlow) * 100 : 0;
 					return (
-						<article key={cat.key} className="flow-card">
+						<article
+							key={cat.key}
+							className="flow-card"
+							onClick={() => setSelectedCategory({ ...cat, accounts: categoryAccounts[cat.key] || [] })}
+							role="button"
+							tabIndex={0}
+							onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setSelectedCategory({ ...cat, accounts: categoryAccounts[cat.key] || [] }); } }}
+						>
 							<div className="flow-card-head">
 								<div className="flow-dot" style={{ background: cat.tone || '#6366f1' }} aria-hidden="true" />
 								<div>
@@ -291,22 +299,6 @@ export const Accounts = ({ transactions = [], transactionsLoading }) => {
 							<div className="flow-bar">
 								<div className="flow-bar-fill" style={{ width: `${inflowRatio}%`, background: cat.tone || '#22c55e' }} />
 							</div>
-							{categoryAccounts[cat.key]?.length > 0 && (
-								<div className="flow-detail">
-									{categoryAccounts[cat.key].map((acc) => (
-										<div key={acc.id} className="flow-detail-row">
-											<div className="flow-detail-name">
-												<span className="flow-detail-dot" style={{ background: acc.tone || '#6366f1' }} aria-hidden="true" />
-												<span>{acc.label}</span>
-											</div>
-											<div className="flow-detail-amounts">
-												<span>+ {formatCurrency(acc.inflows)}</span>
-												<span>- {formatCurrency(acc.outflows)}</span>
-											</div>
-										</div>
-									))}
-								</div>
-							)}
 						</article>
 					);
 				})}
@@ -367,6 +359,55 @@ export const Accounts = ({ transactions = [], transactionsLoading }) => {
 				);
 			})}
 		</section>
+
+		{selectedCategory && (
+			<div className="account-detail-overlay" role="dialog" aria-modal="true">
+				<div className="account-detail category-detail">
+					<header className="detail-head">
+						<div>
+							<p className="eyebrow">Resumen</p>
+							<h4>{selectedCategory.label}</h4>
+							<small>{selectedCategory.count || 0} cuentas visibles en la categoría</small>
+						</div>
+						<button className="detail-close" onClick={() => setSelectedCategory(null)}>Cerrar</button>
+					</header>
+					<div className="category-summary">
+						<div>
+							<span>Entradas</span>
+							<strong>{formatCurrency(selectedCategory.inflows)}</strong>
+						</div>
+						<div>
+							<span>Salidas</span>
+							<strong>{formatCurrency(selectedCategory.outflows)}</strong>
+						</div>
+						<div>
+							<span>Saldo</span>
+							<strong>{formatCurrency(selectedCategory.balance)}</strong>
+						</div>
+					</div>
+					<div className="category-detail-list">
+						{selectedCategory.accounts.length === 0 && (
+							<p className="detail-empty">Sin cuentas visibles en esta categoría.</p>
+						)}
+						{selectedCategory.accounts.map((acc) => (
+							<div key={acc.id} className="category-detail-row">
+								<div className="flow-detail-name">
+									<span className="flow-detail-dot" style={{ background: acc.tone || '#6366f1' }} aria-hidden="true" />
+									<div>
+										<p className="detail-desc">{acc.label}</p>
+										<small className="detail-sub">Saldo {formatCurrency(acc.balance)}</small>
+									</div>
+								</div>
+								<div className="category-detail-amounts">
+									<span>+ {formatCurrency(acc.inflows)}</span>
+									<span>- {formatCurrency(acc.outflows)}</span>
+								</div>
+							</div>
+						))}
+					</div>
+				</div>
+			</div>
+		)}
 
 			{summary.warnings.length > 0 && (
 				<section className="accounts-warnings">
