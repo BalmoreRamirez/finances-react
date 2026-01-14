@@ -110,6 +110,7 @@ export const BASE_ACCOUNTS = [
 		nature: 'debit',
 		tone: '#ef4444',
 		icon: '🍽️',
+		showInAccounts: false,
 	},
 	{
 		id: 'gastos-transporte',
@@ -120,6 +121,7 @@ export const BASE_ACCOUNTS = [
 		nature: 'debit',
 		tone: '#f97316',
 		icon: '🚌',
+		showInAccounts: false,
 	},
 	{
 		id: 'gastos-servicios',
@@ -130,6 +132,7 @@ export const BASE_ACCOUNTS = [
 		nature: 'debit',
 		tone: '#fb7185',
 		icon: '💡',
+		showInAccounts: false,
 	},
 	{
 		id: 'gastos-compras-personales',
@@ -140,6 +143,7 @@ export const BASE_ACCOUNTS = [
 		nature: 'debit',
 		tone: '#f43f5e',
 		icon: '🛍️',
+		showInAccounts: false,
 	},
 	{
 		id: 'gastos-operativos',
@@ -150,6 +154,7 @@ export const BASE_ACCOUNTS = [
 		nature: 'debit',
 		tone: '#ef4444',
 		icon: '🧾',
+		showInAccounts: false,
 	},
 ];
 
@@ -273,6 +278,7 @@ const createLedgerAccount = (account) => ({
 	tone: account.tone,
 	icon: account.icon,
 	hidden: Boolean(account.hidden),
+	showInAccounts: account.showInAccounts !== false,
 	balance: 0,
 	inflows: 0,
 	outflows: 0,

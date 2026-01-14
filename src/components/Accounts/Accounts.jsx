@@ -24,7 +24,7 @@ export const Accounts = ({ transactions = [], transactionsLoading }) => {
 	const accountsOverlay = useMemo(() => summary.accounts, [summary.accounts]);
 
 	const visibleAccounts = useMemo(
-		() => accountsOverlay.filter((account) => !account.hidden),
+		() => accountsOverlay.filter((account) => !account.hidden && account.showInAccounts !== false),
 		[accountsOverlay]
 	);
 
@@ -187,7 +187,7 @@ export const Accounts = ({ transactions = [], transactionsLoading }) => {
 			map[key].inflows += inflowsAdj;
 			map[key].outflows += outflowsAdj;
 			map[key].balance += account.balance;
-			if (!account.hidden) {
+			if (!account.hidden && account.showInAccounts !== false) {
 				map[key].count += 1;
 			}
 		});
