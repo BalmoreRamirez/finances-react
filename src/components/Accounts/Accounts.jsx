@@ -91,6 +91,20 @@ export const Accounts = ({ transactions = [], transactionsLoading }) => {
 		return [...base, ...synthetic].sort((a, b) => b.date - a.date);
 	}, [transactions, selectedAccount, purchases, credits]);
 
+	const computeCreditPrincipal = (credit) => {
+		const principalField = Number(credit.principalAmount);
+		if (!Number.isNaN(principalField) && principalField > 0) return principalField;
+
+		const total = Number(credit.totalAmount);
+		const interest = Number(credit.interestAmount);
+		if (!Number.isNaN(total) && !Number.isNaN(interest) && total > 0 && interest >= 0) {
+			const candidate = total - interest;
+			return candidate > 0 ? candidate : total;
+		}
+
+		return total || 0;
+	};
+
 	const totalIngresos = accountsOverlay
 		.filter((account) => account.categoryKey === 'ingresos')
 		.reduce((sum, account) => sum + account.outflows, 0);
@@ -238,8 +252,26 @@ export const Accounts = ({ transactions = [], transactionsLoading }) => {
 
 		<section className="accounts-grid">
 			{visibleAccounts.map((account) => {
-				const totalFlow = account.inflows + account.outflows;
-				const inflowRatio = totalFlow > 0 ? (account.inflows / totalFlow) * 100 : 0;
+				let retorno = 0;
+				if (account.id === 'activos-fondo-inversiones') {
+					const txReturns = transactions
+						.filter((t) => t.toAccountId === 'activos-fondo-inversiones' && (
+							t.autoSourceRole === 'investment-capital-return' || /devoluci[óo]n de capital/i.test(t.description || '')
+						))
+						.reduce((sum, t) => sum + Math.abs(Number(t.amount) || 0), 0);
+
+					const creditReturns = credits.reduce((sum, credit) => {
+						const principal = computeCreditPrincipal(credit);
+						const returned = Math.min(Number(credit.totalPaid) || 0, principal);
+						return sum + Math.max(0, returned);
+					}, 0);
+
+					retorno = txReturns + creditReturns;
+				}
+
+				const displayInflows = Math.max(0, account.inflows - retorno);
+				const totalFlow = displayInflows + account.outflows + retorno;
+				const inflowRatio = totalFlow > 0 ? (displayInflows / totalFlow) * 100 : 0;
 				return (
 					<article
 						key={account.id}
@@ -265,8 +297,14 @@ export const Accounts = ({ transactions = [], transactionsLoading }) => {
 						<div className="account-flow-stats">
 							<div>
 								<span>Entradas</span>
-								<strong>{formatCurrency(account.inflows)}</strong>
+								<strong>{formatCurrency(displayInflows)}</strong>
 							</div>
+							{account.id === 'activos-fondo-inversiones' && (
+								<div>
+									<span>Retorno</span>
+									<strong>{formatCurrency(retorno)}</strong>
+								</div>
+							)}
 							<div>
 								<span>Salidas</span>
 								<strong>{formatCurrency(account.outflows)}</strong>
