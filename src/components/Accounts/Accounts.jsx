@@ -28,6 +28,20 @@ export const Accounts = ({ transactions = [], transactionsLoading }) => {
 		[accountsOverlay]
 	);
 
+	const computeCreditPrincipal = (credit) => {
+		const principalField = Number(credit.principalAmount);
+		if (!Number.isNaN(principalField) && principalField > 0) return principalField;
+
+		const total = Number(credit.totalAmount);
+		const interest = Number(credit.interestAmount);
+		if (!Number.isNaN(total) && !Number.isNaN(interest) && total > 0 && interest >= 0) {
+			const candidate = total - interest;
+			return candidate > 0 ? candidate : total;
+		}
+
+		return total || 0;
+	};
+
 	const accountHistory = useMemo(() => {
 		if (!selectedAccount) return [];
 
@@ -91,19 +105,44 @@ export const Accounts = ({ transactions = [], transactionsLoading }) => {
 		return [...base, ...synthetic].sort((a, b) => b.date - a.date);
 	}, [transactions, selectedAccount, purchases, credits]);
 
-	const computeCreditPrincipal = (credit) => {
-		const principalField = Number(credit.principalAmount);
-		if (!Number.isNaN(principalField) && principalField > 0) return principalField;
+	const fundRetorno = useMemo(() => {
+		const fundAccount = accountsOverlay.find((a) => a.id === 'activos-fondo-inversiones');
+		if (!fundAccount) return { retorno: 0, inflowsAdj: 0 };
 
-		const total = Number(credit.totalAmount);
-		const interest = Number(credit.interestAmount);
-		if (!Number.isNaN(total) && !Number.isNaN(interest) && total > 0 && interest >= 0) {
-			const candidate = total - interest;
-			return candidate > 0 ? candidate : total;
-		}
+		const txReturns = transactions
+			.filter((t) => t.toAccountId === 'activos-fondo-inversiones' && (
+				t.autoSourceRole === 'investment-capital-return' || /devoluci[óo]n de capital/i.test(t.description || '')
+			))
+			.reduce((sum, t) => sum + Math.abs(Number(t.amount) || 0), 0);
 
-		return total || 0;
-	};
+		const creditReturns = credits.reduce((sum, credit) => {
+			const principal = computeCreditPrincipal(credit);
+			const returned = Math.min(Number(credit.totalPaid) || 0, principal);
+			return sum + Math.max(0, returned);
+		}, 0);
+
+		const retorno = txReturns + creditReturns;
+		const inflowsAdj = Math.max(0, (fundAccount.inflows || 0) - retorno);
+		return { retorno, inflowsAdj };
+	}, [accountsOverlay, transactions, credits]);
+
+	const categoryAccounts = useMemo(() => {
+		const map = {};
+		visibleAccounts.forEach((account) => {
+			const key = account.categoryKey || 'otros';
+			if (!map[key]) map[key] = [];
+			const isFondo = account.id === 'activos-fondo-inversiones';
+			map[key].push({
+				id: account.id,
+				label: account.label,
+				inflows: isFondo ? fundRetorno.inflowsAdj : account.inflows,
+				outflows: account.outflows,
+				balance: account.balance,
+				tone: account.tone,
+			});
+		});
+		return map;
+	}, [visibleAccounts, fundRetorno]);
 
 	const totalIngresos = accountsOverlay
 		.filter((account) => account.categoryKey === 'ingresos')
@@ -125,6 +164,7 @@ export const Accounts = ({ transactions = [], transactionsLoading }) => {
 	const categoryTotals = useMemo(() => {
 		const map = {};
 		accountsOverlay.forEach((account) => {
+			if (account.hidden) return;
 			const key = account.categoryKey || 'otros';
 			if (!map[key]) {
 				map[key] = {
@@ -137,8 +177,15 @@ export const Accounts = ({ transactions = [], transactionsLoading }) => {
 					count: 0,
 				};
 			}
-			map[key].inflows += account.inflows;
-			map[key].outflows += account.outflows;
+
+			let inflowsAdj = account.inflows;
+			let outflowsAdj = account.outflows;
+			if (account.id === 'activos-fondo-inversiones') {
+				inflowsAdj = fundRetorno.inflowsAdj;
+			}
+
+			map[key].inflows += inflowsAdj;
+			map[key].outflows += outflowsAdj;
 			map[key].balance += account.balance;
 			if (!account.hidden) {
 				map[key].count += 1;
@@ -153,7 +200,7 @@ export const Accounts = ({ transactions = [], transactionsLoading }) => {
 			if (bIdx === -1) return -1;
 			return aIdx - bIdx;
 		});
-	}, [accountsOverlay]);
+	}, [accountsOverlay, fundRetorno, categoryLabels, categoryOrder]);
 
 	const assetsTotal = categoryTotals.find((c) => c.key === 'activos')?.balance || 0;
 	const liabilitiesTotal = categoryTotals.find((c) => c.key === 'pasivos')?.balance || 0;
@@ -244,6 +291,22 @@ export const Accounts = ({ transactions = [], transactionsLoading }) => {
 							<div className="flow-bar">
 								<div className="flow-bar-fill" style={{ width: `${inflowRatio}%`, background: cat.tone || '#22c55e' }} />
 							</div>
+							{categoryAccounts[cat.key]?.length > 0 && (
+								<div className="flow-detail">
+									{categoryAccounts[cat.key].map((acc) => (
+										<div key={acc.id} className="flow-detail-row">
+											<div className="flow-detail-name">
+												<span className="flow-detail-dot" style={{ background: acc.tone || '#6366f1' }} aria-hidden="true" />
+												<span>{acc.label}</span>
+											</div>
+											<div className="flow-detail-amounts">
+												<span>+ {formatCurrency(acc.inflows)}</span>
+												<span>- {formatCurrency(acc.outflows)}</span>
+											</div>
+										</div>
+									))}
+								</div>
+							)}
 						</article>
 					);
 				})}
@@ -252,24 +315,9 @@ export const Accounts = ({ transactions = [], transactionsLoading }) => {
 
 		<section className="accounts-grid">
 			{visibleAccounts.map((account) => {
-				let retorno = 0;
-				if (account.id === 'activos-fondo-inversiones') {
-					const txReturns = transactions
-						.filter((t) => t.toAccountId === 'activos-fondo-inversiones' && (
-							t.autoSourceRole === 'investment-capital-return' || /devoluci[óo]n de capital/i.test(t.description || '')
-						))
-						.reduce((sum, t) => sum + Math.abs(Number(t.amount) || 0), 0);
-
-					const creditReturns = credits.reduce((sum, credit) => {
-						const principal = computeCreditPrincipal(credit);
-						const returned = Math.min(Number(credit.totalPaid) || 0, principal);
-						return sum + Math.max(0, returned);
-					}, 0);
-
-					retorno = txReturns + creditReturns;
-				}
-
-				const displayInflows = Math.max(0, account.inflows - retorno);
+				const isFondo = account.id === 'activos-fondo-inversiones';
+				const retorno = isFondo ? fundRetorno.retorno : 0;
+				const displayInflows = isFondo ? fundRetorno.inflowsAdj : account.inflows;
 				const totalFlow = displayInflows + account.outflows + retorno;
 				const inflowRatio = totalFlow > 0 ? (displayInflows / totalFlow) * 100 : 0;
 				return (
@@ -289,6 +337,7 @@ export const Accounts = ({ transactions = [], transactionsLoading }) => {
 							<div>
 								<h4>{account.label}</h4>
 								<p>{account.description}</p>
+								<span className="account-tag">{categoryLabels[account.categoryKey] || 'Cuenta'}</span>
 							</div>
 						</div>
 						<div className={`account-balance ${account.balance >= 0 ? 'positive' : 'negative'}`}>
@@ -299,7 +348,7 @@ export const Accounts = ({ transactions = [], transactionsLoading }) => {
 								<span>Entradas</span>
 								<strong>{formatCurrency(displayInflows)}</strong>
 							</div>
-							{account.id === 'activos-fondo-inversiones' && (
+							{isFondo && (
 								<div>
 									<span>Retorno</span>
 									<strong>{formatCurrency(retorno)}</strong>

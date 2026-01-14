@@ -164,6 +164,46 @@
 	background: #22c55e;
 }
 
+.flow-detail {
+	border-top: 1px solid #e2e8f0;
+	padding-top: 8px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.flow-detail-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	border: 1px solid #e2e8f0;
+	background: #ffffff;
+	border-radius: 10px;
+	padding: 6px 8px;
+	font-size: 12px;
+	color: #475569;
+}
+
+.flow-detail-name {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.flow-detail-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+}
+
+.flow-detail-amounts {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-variant-numeric: tabular-nums;
+	color: #1f2937;
+}
+
 .accounts-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -193,6 +233,18 @@
 	display: flex;
 	gap: 12px;
 	align-items: center;
+}
+
+.account-tag {
+	display: inline-block;
+	margin-top: 6px;
+	padding: 4px 8px;
+	border-radius: 999px;
+	background: #eef2ff;
+	color: #4f46e5;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
 }
 
 .account-card-head h4 {
