@@ -3,23 +3,25 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+  padding: var(--space-6);
 }
 
 .auth-form {
-  background: white;
-  padding: 40px;
-  border-radius: 10px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  background: var(--bg-surface);
+  padding: var(--space-10);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
 }
 
 .auth-form h2 {
-  margin-bottom: 30px;
-  color: #333;
+  margin-bottom: var(--space-8);
+  color: var(--gray-900);
   text-align: center;
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
 }
 
 .form-group {
@@ -28,47 +30,62 @@
 
 .form-group label {
   display: block;
-  margin-bottom: 8px;
-  color: #555;
-  font-weight: 500;
+  margin-bottom: var(--space-2);
+  color: var(--gray-700);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-sm);
 }
 
 .form-group input {
   width: 100%;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 14px;
-  transition: border-color 0.3s;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  transition: all 0.2s ease;
 }
 
 .form-group input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-bg);
 }
 
 /* Botón primario: usar Bootstrap .btn .btn-primary */
 
 .error-message {
-  background: #fee;
-  color: #c33;
-  padding: 12px;
-  border-radius: 5px;
-  margin-bottom: 20px;
-  font-size: 14px;
+  background: var(--danger-light);
+  color: var(--danger);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-5);
+  font-size: var(--font-size-sm);
+  border: 1px solid var(--danger);
 }
 
 .toggle-auth {
-  margin-top: 20px;
+  margin-top: var(--space-6);
   text-align: center;
-  color: #666;
+  color: var(--gray-600);
+  font-size: var(--font-size-sm);
 }
 
 .toggle-auth button {
   background: none;
   border: none;
-  color: #667eea;
+  color: var(--primary);
   cursor: pointer;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.toggle-auth button:hover {
+  color: var(--primary-hover);
+}
+
+@media (max-width: 640px) {
+  .auth-form {
+    padding: var(--space-6);
+  }
 }

@@ -1,25 +1,28 @@
 .transaction-form {
-  background: white;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  margin-bottom: 30px;
+  background: var(--bg-surface);
+  padding: var(--space-8);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-light);
+  margin-bottom: var(--space-8);
 }
 
 .transaction-form h3 {
-  margin: 0 0 25px 0;
-  color: #333;
+  margin: 0 0 var(--space-6) 0;
+  color: var(--gray-900);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
 }
 
 .form-error {
-  background: #fee;
-  border: 2px solid #f56565;
-  border-radius: 8px;
-  padding: 15px;
-  margin-bottom: 20px;
+  background: var(--danger-light);
+  border: 2px solid var(--danger);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-5);
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: var(--space-3);
   animation: shake 0.5s;
 }
 
@@ -58,25 +61,27 @@
 }
 
 .form-group label {
-  margin-bottom: 8px;
-  color: #555;
-  font-weight: 500;
-  font-size: 14px;
+  margin-bottom: var(--space-2);
+  color: var(--gray-700);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-sm);
 }
 
 .form-group input,
 .form-group select {
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 14px;
-  transition: border-color 0.3s;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  transition: all 0.2s ease;
+  background: var(--bg-surface);
 }
 
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-bg);
 }
 
 .form-actions {
@@ -87,15 +92,31 @@
 
 .btn-submit {
   flex: 1;
-  padding: 12px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: var(--space-3) var(--space-6);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
   color: white;
   border: none;
-  border-radius: 5px;
-  font-size: 16px;
-  font-weight: 600;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-submit:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+@media (max-width: 640px) {
+  .transaction-form {
+    padding: var(--space-5);
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .btn-submit:hover {

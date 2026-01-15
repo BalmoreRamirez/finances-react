@@ -60,44 +60,38 @@
   padding: 0;
 }
 
-/* Dashboard layout */
-.dashboard-content {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0 2rem;
-}
-
+/* Dashboard Content */
 .dashboard-grid {
   display: flex;
   flex-direction: column;
-  gap: 32px;
-  padding-bottom: 32px;
+  gap: var(--space-6);
 }
 
+/* Hero Section */
 .dashboard-hero {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  gap: 24px;
+  grid-template-columns: 1.5fr 1fr;
+  gap: var(--space-6);
 }
 
 .dashboard-hero-card {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 32px;
-  padding: 28px;
-  border-radius: 28px;
+  gap: var(--space-8);
+  padding: var(--space-8);
+  border-radius: var(--radius-xl);
   color: #ffffff;
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-  box-shadow: 0 30px 60px rgba(99, 102, 241, 0.28);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+  box-shadow: var(--shadow-xl);
   overflow: hidden;
 }
 
 .dashboard-hero-card::after {
   content: '';
   position: absolute;
-  width: 180px;
-  height: 180px;
+  width: 200px;
+  height: 200px;
   right: -50px;
   top: -50px;
   border-radius: 50%;

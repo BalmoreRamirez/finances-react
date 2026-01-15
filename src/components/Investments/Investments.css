@@ -284,6 +284,7 @@
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  min-height: 300px;
 }
 
 .empty-icon {
@@ -301,6 +302,11 @@
 .empty-state p {
   color: var(--text-secondary);
   margin-bottom: 24px;
+  font-size: 1rem;
+}
+
+.empty-state .btn {
+  min-width: 200px;
 }
 
 /* Tables */
@@ -716,7 +722,51 @@
   margin-top: 8px;
 }
 
-/* Eliminar estilos de .btn-* para evitar colisión con Bootstrap */
+/* Estilos para botones de Bootstrap dentro del componente Investments */
+.investments-container .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.investments-container .btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.investments-container .btn-primary:hover {
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+}
+
+.investments-container .btn-outline-secondary {
+  background: white;
+  color: var(--text-secondary);
+  border: 2px solid #e5e7eb;
+}
+
+.investments-container .btn-outline-secondary:hover {
+  background: #f9fafb;
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.investments-container .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
 
 /* Payments Modal */
 .payments-modal {
@@ -805,9 +855,14 @@
   font-size: 1.1rem;
 }
 
-.payment-form .btn-primary {
+.payment-form .btn-primary,
+.payment-form .btn {
   width: 100%;
   margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 /* Payments List */
@@ -917,9 +972,14 @@
 
 .modal-actions {
   display: flex;
+  gap: 12px;
   justify-content: flex-end;
   padding-top: 16px;
   border-top: 1px solid #e5e7eb;
+}
+
+.modal-actions .btn {
+  min-width: 120px;
 }
 
 
@@ -993,6 +1053,15 @@
 
   .form-actions .btn {
     width: 100%;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-actions .btn {
+    width: 100%;
+    min-width: unset;
   }
 }
 

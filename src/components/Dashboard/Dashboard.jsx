@@ -15,7 +15,6 @@ import { useAuth } from '../../context/AuthContext';
 import { useTransactions } from '../../hooks/useTransactions';
 import { useAccounts } from '../../hooks/useAccounts';
 import { Sidebar } from '../Sidebar/Sidebar';
-import { Header } from '../Header/Header';
 import { TransactionForm } from '../TransactionForm/TransactionForm';
 import { TransactionList } from '../TransactionList/TransactionList';
 import { ErrorBanner } from '../ErrorBanner/ErrorBanner';
@@ -262,10 +261,6 @@ export const Dashboard = () => {
       case 'dashboard':
         return (
           <>
-            <Header 
-              title="Dashboard unificado" 
-              subtitle="Resumen y análisis integrados en una sola vista"
-            />
             <div className="dashboard-grid">
               <div className="dashboard-hero">
                 <div className="dashboard-hero-card">
@@ -432,17 +427,15 @@ export const Dashboard = () => {
       case 'transactions':
         return (
           <>
-            <Header 
-              title="Transacciones" 
-              subtitle="Gestiona todas tus transacciones en un solo lugar"
-            >
+            <div className="transactions-header">
+              <h2>Transacciones</h2>
               <button 
                 onClick={() => setShowForm(!showForm)} 
                 className="btn btn-primary"
               >
                 {showForm ? '✕ Cancelar' : '+ Nueva Transacción'}
               </button>
-            </Header>
+            </div>
 
             {showForm && (
               <div className="form-section">
@@ -468,10 +461,6 @@ export const Dashboard = () => {
       case 'investments':
         return (
           <>
-            <Header 
-              title="Inversiones" 
-              subtitle="Gestiona tus compras y créditos con seguimiento detallado"
-            />
             <Investments transactions={transactions} />
           </>
         );
@@ -479,10 +468,6 @@ export const Dashboard = () => {
       case 'accounts':
         return (
           <>
-            <Header 
-              title="Cuentas contables" 
-              subtitle="Valida cómo circula el dinero entre Activos, Pasivos, Patrimonio, Ingresos y Gastos"
-            />
             <Accounts 
               transactions={transactions}
               transactionsLoading={loading}
@@ -493,10 +478,6 @@ export const Dashboard = () => {
       case 'settings':
         return (
           <>
-            <Header 
-              title="Configuración" 
-              subtitle="Personaliza tu experiencia y gestiona categorías"
-            />
             <Settings />
           </>
         );
@@ -507,29 +488,21 @@ export const Dashboard = () => {
   };
 
   return (
-    <div className="app-layout">
+    <div className="app">
       <LoaderOverlay visible={isDataSyncing} message="Cargando movimientos y cuentas..." />
       {showErrorBanner && <ErrorBanner onDismiss={() => setShowErrorBanner(false)} />}
-      
-      {/* Navbar superior con toggler para Offcanvas */}
-      <nav className="navbar navbar-light bg-light sticky-top d-lg-none px-3 w-100 mobile-navbar position-relative">
-        <button className="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#appSidebar" aria-controls="appSidebar" aria-label="Abrir menú">
-          <span className="navbar-toggler-icon"></span>
-        </button>
-        <span className="navbar-brand mb-0 h1">FinanceApp</span>
-      </nav>
 
-      <Sidebar 
-        currentView={currentView}
-        onViewChange={handleViewChange}
-        onLogout={handleLogout}
-        userEmail={user?.email}
-      />
+      <aside className="app-sidebar">
+        <Sidebar 
+          currentView={currentView}
+          onViewChange={handleViewChange}
+          onLogout={handleLogout}
+          userEmail={user?.email}
+        />
+      </aside>
 
-      <main className="main-content with-sidebar">
-  <div className="dashboard-content">
-          {renderContent()}
-        </div>
+      <main className="app-main">
+        {renderContent()}
       </main>
     </div>
   );
